@@ -14,6 +14,7 @@ from .knowledge import (
 )
 from .knowledge import save_entry as save_learning_entry
 from .knowledge import search_hybrid as search_knowledge_hybrid
+from .routing import detect_specialty, resolve_model, resolve_synthesis_model
 from .upstream import UpstreamClient
 
 Event = tuple[str, Any]  # ("reasoning" | "content", text) | ("tool_calls", list[dict])
@@ -44,6 +45,7 @@ class TaskNode:
     children: list["TaskNode"] = field(default_factory=list)
     is_atomic: bool = False
     result: str | None = None
+    specialty: str = "default"
 
 
 @dataclass
@@ -299,6 +301,7 @@ class AtomicDecompositionEngine:
         user_text: str,
         emit_kind: Literal["reasoning", "content"],
         extra_messages: list[dict[str, Any]] | None = None,
+        model: str | None = None,
     ) -> AsyncIterator[Event]:
         """Ejecuta una sola ronda de streaming para la fase en curso (hoja
         atómica o síntesis). No sabe cuál de las dos es — solo construye
@@ -325,7 +328,7 @@ class AtomicDecompositionEngine:
         result_parts: list[str] = []
         tool_call_acc: dict[int, dict] = {}
         async for chunk in self._client.stream_raw(
-            messages, model=self._model, tools=phase_tools, tool_choice=phase_tool_choice
+            messages, model=model or self._model, tools=phase_tools, tool_choice=phase_tool_choice
         ):
             delta = chunk["delta"]
             piece = delta.get("content")
@@ -369,6 +372,19 @@ class AtomicDecompositionEngine:
         )
         return system, user_text
 
+    def _resolve_leaf_model(self, leaf: TaskNode) -> str:
+        """F1: si el routing por especialidad está activo, clasifica la hoja
+        (visión/código/resumen/defecto) y devuelve el modelo del arsenal local
+        que debe ejecutarla; en caso contrario devuelve el modelo base del
+        turno. La descomposición (Fase 1) nunca pasa por aquí: planificar es la
+        tarea más exigente y se queda siempre en el cerebro principal."""
+        if not settings.specialty_routing:
+            return self._model
+        has_images = bool(self.goal_ctx.image_parts) if self.goal_ctx else False
+        specialty = detect_specialty(leaf.description, has_images=has_images)
+        leaf.specialty = specialty
+        return resolve_model(specialty, self._model)
+
     async def _execute_from(self, start_index: int) -> AsyncIterator[Event]:
         total = len(self.leaves)
         for i in range(start_index, total):
@@ -380,7 +396,14 @@ class AtomicDecompositionEngine:
             self.tool_round_count = 0
             self.pending_conversation = []
 
-            async for kind, payload in self._run_phase(system, user_text, "reasoning"):
+            leaf_model = self._resolve_leaf_model(leaf)
+            if settings.specialty_routing and leaf_model != self._model:
+                yield (
+                    "reasoning",
+                    f"[routing] especialidad '{leaf.specialty}' → modelo '{leaf_model}'\n\n",
+                )
+
+            async for kind, payload in self._run_phase(system, user_text, "reasoning", model=leaf_model):
                 if kind == "_tool_calls_pending":
                     self._enter_pending("leaf", i, payload)
                     yield ("tool_calls", payload["tool_calls"])
@@ -433,12 +456,14 @@ class AtomicDecompositionEngine:
             leaf = self.leaves[index]
             system, user_text = await self._leaf_phase_inputs(leaf)
             emit_kind: Literal["reasoning", "content"] = "reasoning"
+            phase_model = self._resolve_leaf_model(leaf)
         else:
             system, user_text = self._synthesis_phase_inputs()
             emit_kind = "content"
+            phase_model = resolve_synthesis_model(self._model)
 
         extra_messages = list(self.pending_conversation)
-        async for kind, payload in self._run_phase(system, user_text, emit_kind, extra_messages=extra_messages):
+        async for kind, payload in self._run_phase(system, user_text, emit_kind, extra_messages=extra_messages, model=phase_model):
             if kind == "_tool_calls_pending":
                 self._enter_pending(phase, index, payload)
                 yield ("tool_calls", payload["tool_calls"])
@@ -477,10 +502,11 @@ class AtomicDecompositionEngine:
 
     async def synthesize_final(self) -> AsyncIterator[Event]:
         system, user_text = self._synthesis_phase_inputs()
+        synth_model = resolve_synthesis_model(self._model)
         self.tool_round_count = 0
         self.pending_conversation = []
 
-        async for kind, payload in self._run_phase(system, user_text, "content"):
+        async for kind, payload in self._run_phase(system, user_text, "content", model=synth_model):
             if kind == "_tool_calls_pending":
                 self._enter_pending("synthesis", None, payload)
                 yield ("tool_calls", payload["tool_calls"])

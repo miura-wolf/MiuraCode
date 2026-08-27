@@ -31,14 +31,15 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | Endpoints admin de conocimiento (`/v1/knowledge*`) | ✅ implementado (`main.py`) |
 | Backfill de vectores para la KB existente | ✅ `backfill_embeddings.py` + endpoint |
 | Multi-modelo **por turno** (cambiar `model` en cada request) | ✅ funciona vía `requested_model = request.model or settings.upstream_model` |
+| **Routing multi-modelo por especialidad (F1)** | ✅ implementado (`app/routing.py`): cada hoja atómica va al modelo visión/código/rápido adecuado |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **71/71** pasando |
+| Tests | ✅ **87/87** pasando |
 
 ---
 
 ## 🕳️ Backlog priorizado
 
-### 🔴 F1 — Routing MULTI-MODELO por especialidad *(el gap más grande)*
+### ✅ F1 — Routing MULTI-MODELO por especialidad *(IMPLEMENTADO en `app/routing.py`)*
 
 Hoy el proxy usa **UN remero en TODAS las fases** del turno. Doblamos hacia
 orquestador real asignando modelo por *hoja atómica* según especialidad:
@@ -139,4 +140,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — por el equipo.*
+*Última actualización: 2026-08-27 — F1 (routing multi-modelo por especialidad) implementado y testeado.*

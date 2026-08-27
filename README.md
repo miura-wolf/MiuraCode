@@ -126,6 +126,11 @@ Variables de entorno disponibles en `.env`:
 | `HYBRID_CANDIDATES` | Cuántos candidatos toma cada vía antes de fusionarlos | `6` |
 | `AUTO_LEARN_KNOWLEDGE` | Auto-aprendizaje: guardar hojas/síntesis exitosas en la knowledge base con dedupe | `true` |
 | `ADMIN_TOKEN` | Token exigido en header `X-Admin-Token` para `/v1/knowledge*`. Vacío = confía en localhost | *(vacío)* |
+| `SPECIALTY_ROUTING` | Activa el routing multi-modelo por especialidad (F1) | `false` |
+| `VISION_MODEL` | Modelo para hojas de visión (solo si el turno trae imágenes). Vacío = modelo base | *(vacío)* |
+| `CODE_MODEL` | Modelo para hojas de código/programación. Vacío = modelo base | *(vacío)* |
+| `FAST_MODEL` | Modelo rápido para resúmenes/traducciones/listados. Vacío = modelo base | *(vacío)* |
+| `SYNTHESIS_MODEL` | Modelo para la síntesis final. Vacío = modelo base | *(vacío)* |
 
 ### Endpoints de conocimiento (RAG)
 
@@ -140,10 +145,37 @@ Además del chat, el proxy expone administración de su base de conocimiento:
 También existe `backfill_embeddings.py` para vectorizar la KB desde consola:
 `python backfill_embeddings.py` (con el servidor de embeddings arriba).
 
+### Routing multi-modelo por especialidad (F1)
+
+Por defecto el proxy usa **un único modelo** para todas las fases del turno. Con
+`SPECIALTY_ROUTING=true` se convierte en un orquestador heterogéneo: cada **hoja
+atómica** se clasifica por especialidad (heurística determinística de palabras
+clave en [app/routing.py](app/routing.py)) y se envía al modelo más adecuado del
+arsenal local:
+
+| Especialidad | Se detecta cuando… | Modelo usado |
+|---|---|---|
+| `vision` | el turno trae imágenes **y** la tarea la referencia | `VISION_MODEL` |
+| `code` | la tarea habla de código/programación | `CODE_MODEL` |
+| `fast` | la tarea es resumen/traducción/listado breve | `FAST_MODEL` |
+| `default` | cualquier otra | modelo base del turno |
+
+Reglas importantes:
+
+- La **descomposición (Fase 1)** nunca se rutea: planificar es la tarea más
+  exigente y se queda siempre en el cerebro principal (modelo base).
+- La **síntesis final** usa `SYNTHESIS_MODEL` si está definido, si no el base.
+- Cualquier modelo de especialidad **vacío** cae al modelo base, así el sistema
+  funciona igual con un solo modelo y mejora al añadir más.
+- El routing respeta el `model` que envíe el cliente como **base del turno**;
+  solo deriva hojas concretas a otros modelos.
+- Requiere un upstream que sirva varios modelos (p. ej. `llama-server` en modo
+  router con `--models-max >1`).
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`) y la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`) y el routing multi-modelo por especialidad (`tests/test_routing.py`).

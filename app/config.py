@@ -44,6 +44,18 @@ class Settings(BaseSettings):
     # sin token extra (confía en localhost).
     admin_token: str = ""
 
+    # F1 — Routing multi-modelo por especialidad. Cuando está activo, el motor
+    # asigna un modelo distinto a cada hoja atómica según su especialidad
+    # detectada (visión, código, resumen rápido) en lugar de usar un único
+    # modelo para todo el turno. Cada modelo de especialidad vacío = usa el
+    # modelo base del turno. La descomposición (Fase 1) siempre usa el modelo
+    # base porque planificar es la tarea más exigente.
+    specialty_routing: bool = False
+    vision_model: str = ""
+    code_model: str = ""
+    fast_model: str = ""
+    synthesis_model: str = ""
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 

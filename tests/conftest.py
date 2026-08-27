@@ -141,6 +141,13 @@ def _isolate_rag_settings(monkeypatch):
     monkeypatch.setattr(settings, "hybrid_search", True)
     monkeypatch.setattr(settings, "auto_learn_knowledge", True)
     monkeypatch.setattr(settings, "admin_token", "")
+    # F1: neutralizar el routing por especialidad que pueda venir del .env real;
+    # los tests que lo necesiten lo re-activan explícitamente.
+    monkeypatch.setattr(settings, "specialty_routing", False)
+    monkeypatch.setattr(settings, "vision_model", "")
+    monkeypatch.setattr(settings, "code_model", "")
+    monkeypatch.setattr(settings, "fast_model", "")
+    monkeypatch.setattr(settings, "synthesis_model", "")
     yield
 
 
