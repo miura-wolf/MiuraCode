@@ -36,8 +36,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Ejecución paralela de hojas (F3)** | ✅ implementado (`engine._execute_parallel`): hojas independientes con `asyncio.gather`, fallback a secuencial con tools |
 | **Streaming con progreso del árbol (F4)** | ✅ implementado (`sse.progress_chunk`): eventos `progress` SSE opt-in para clientes agénticos |
 | **Metadatos/grafo en la KB (F5)** | ✅ implementado (`db.py`): `source`, `updated_at`, `vector_updated_at`, `parent_id`, `version` + migración automática |
+| **Observabilidad / métricas (F6)** | ✅ implementado (`app/metrics.py` + `GET /v1/stats`): contadores y latencias por fase en memoria, sin dependencias externas |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **111/111** pasando |
+| Tests | ✅ **117/117** pasando |
 
 ---
 
@@ -89,11 +90,13 @@ síntesis final     → Qwen3.5-4B
 - Migración automática idempotente para bases creadas antes de F5.
 - `GET /v1/knowledge/stats` añade el desglose `by_source`.
 
-### 🟢 F6 — Observabilidad / métricas
+### ✅ F6 — Observabilidad / métricas *(IMPLEMENTADO en `app/metrics.py` + `GET /v1/stats`)*
 
-- Contadores: nº de hojas descompuestas, tasa de acierto de tools, latencia por
-  fase, eficacia del RAG (¿cuántas veces la recuperación ayudó?).
-- Exponer `/v1/stats` y/o logs estructurados (JSON).
+- Contadores: hojas descompuestas/ejecutadas, ejecuciones paralelas vs secuenciales,
+  rondas y llamadas de tools, consultas/aciertos/fallos de RAG.
+- Latencias por fase: descomposición, ejecución de hoja y síntesis.
+- Registro en memoria, sin dependencias externas, expuesto vía `GET /v1/stats`
+  (protegido por `X-Admin-Token` como el resto de endpoints admin).
 
 ---
 
@@ -146,4 +149,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso) y F5 (metadatos KB) implementados y testeados.*
+*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB) y F6 (observabilidad/métricas) implementados y testeados.*

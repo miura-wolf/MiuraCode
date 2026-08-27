@@ -16,6 +16,7 @@ from .config import settings
 from .content import split_content
 from .knowledge import backfill_vectors, save_entry, search_hybrid
 from .engine import AtomicDecompositionEngine, Event, GoalContext
+from .metrics import metrics
 from .schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -304,6 +305,20 @@ async def get_knowledge_stats(
 ) -> dict:
     _ensure_admin(x_admin_token)
     return await db.knowledge_stats()
+
+
+@app.get("/v1/stats")
+async def get_runtime_stats(
+    x_admin_token: Optional[str] = Header(default=None),
+) -> dict:
+    """F6 — Observabilidad: contadores y latencias del motor (hojas
+    descompuestas/ejecutadas, rondas de tools, aciertos/fallos de RAG, latencia
+    por fase) junto con el estado de la base de conocimiento. Todo en memoria,
+    sin dependencias externas."""
+    _ensure_admin(x_admin_token)
+    snapshot = metrics.snapshot()
+    snapshot["knowledge"] = await db.knowledge_stats()
+    return snapshot
 
 
 @app.post("/v1/knowledge/backfill")

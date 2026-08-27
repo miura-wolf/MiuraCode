@@ -162,6 +162,7 @@ Además del chat, el proxy expone administración de su base de conocimiento:
 - `GET /v1/knowledge/stats` — total, desglose por categoría y cobertura vectorial
 - `POST /v1/knowledge/backfill` — vectoriza entradas que quedaron sin embedding
 - `DELETE /v1/knowledge/{id}` — poda quirúrgica (útil para limpiar auto-aprendizajes malos)
+- `GET /v1/stats` — observabilidad (F6): contadores y latencias del motor + estado de la KB
 
 También existe `backfill_embeddings.py` para vectorizar la KB desde consola:
 `python backfill_embeddings.py` (con el servidor de embeddings arriba).
@@ -245,10 +246,32 @@ normales lo ignoran) para que los **clientes agénticos** muestren progreso real
 
 Ejemplo de chunk: `{"object":"chat.completion.chunk","choices":[],"progress":{"type":"leaf_done","index":0,"total":2,...}}`.
 
+### Observabilidad / métricas (F6)
+
+El proxy lleva un registro **ligero y en memoria** (sin dependencias externas,
+[app/metrics.py](app/metrics.py)) de lo que hace el motor en cada turno, expuesto
+en `GET /v1/stats` (protegido por `X-Admin-Token` como el resto de endpoints
+admin). El snapshot incluye:
+
+- **Contadores** — hojas descompuestas (`leaves_decomposed`) y ejecutadas
+  (`leaves_executed`), ejecuciones paralelas vs secuenciales
+  (`parallel_executions` / `sequential_executions`), rondas y llamadas de tools
+  (`tool_call_rounds` / `tool_calls`) y consultas/aciertos/fallos de RAG
+  (`rag_queries` / `rag_hits` / `rag_misses`).
+- **Latencias por fase** — `decomposition`, `leaf_execution` y `synthesis`, cada
+  una con `count`, `total_s`, `avg_s` y `max_s`.
+- **Estado de la KB** — el mismo desglose que `GET /v1/knowledge/stats`, bajo la
+  clave `knowledge`.
+
+Ejemplo: `{"uptime_s": 12.3, "counters": {"leaves_decomposed": 3, ...}, "latency": {"synthesis": {"count": 1, "avg_s": 0.42, ...}}, "knowledge": {...}}`.
+
+Al ser acumuladores en memoria de un solo proceso, se reinician al reiniciar el
+proxy; es intencionalmente simple (no Prometheus) porque el proxy es local.
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`) y los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`), los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`) y la observabilidad/métricas (`tests/test_metrics.py`).

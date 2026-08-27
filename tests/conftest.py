@@ -143,6 +143,11 @@ def _isolate_rag_settings(monkeypatch):
     """Neutraliza lo que venga del .env real del desarrollador: sin embedder
     (la búsqueda será solo FTS salvo que un test active/monkee lo contrario)
     y admin sin token. Los tests específicos re-fijan estos valores."""
+    # F6: las métricas son un singleton de módulo; se resetean entre tests para
+    # que los contadores/latencias de un test no contaminen a otro.
+    from app.metrics import metrics as _metrics
+
+    _metrics.reset()
     monkeypatch.setattr(settings, "embeddings_base_url", "")
     monkeypatch.setattr(settings, "embeddings_model", "fake-embedder")
     monkeypatch.setattr(settings, "hybrid_search", True)

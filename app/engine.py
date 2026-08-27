@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any, Literal, Optional
@@ -15,6 +16,7 @@ from .knowledge import (
 )
 from .knowledge import save_entry as save_learning_entry
 from .knowledge import search_hybrid as search_knowledge_hybrid
+from .metrics import metrics
 from .routing import detect_specialty, resolve_model, resolve_synthesis_model
 from .upstream import UpstreamClient
 
@@ -187,12 +189,15 @@ class AtomicDecompositionEngine:
     async def _fetch_knowledge(self, query: str) -> str:
         """Busca soluciones previas reutilizables en la base de conocimiento
         SQLite para enriquecer el prompt de la tarea atómica."""
+        metrics.inc("rag_queries")
         try:
             results = await search_knowledge_hybrid(query)
         except Exception:
             results = []
         if not results:
+            metrics.inc("rag_misses")
             return "(no hay soluciones previas relevantes)"
+        metrics.inc("rag_hits")
         parts: list[str] = []
         for r in results:
             parts.append(
@@ -383,6 +388,8 @@ class AtomicDecompositionEngine:
 
         if tool_call_acc:
             tool_calls = [tool_call_acc[i] for i in sorted(tool_call_acc)]
+            metrics.inc("tool_call_rounds")
+            metrics.inc("tool_calls", len(tool_calls))
             if emit_kind == "reasoning":
                 yield (
                     "reasoning",
@@ -448,6 +455,7 @@ class AtomicDecompositionEngine:
                 {"type": "leaf_started", "index": i, "total": total, "description": leaf.description, "model": leaf_model},
             )
 
+            leaf_started = time.monotonic()
             async for kind, payload in self._run_phase(system, user_text, "reasoning", model=leaf_model):
                 if kind == "_tool_calls_pending":
                     self._enter_pending("leaf", i, payload)
@@ -456,6 +464,8 @@ class AtomicDecompositionEngine:
                 if kind == "_phase_done":
                     leaf.result = payload
                     self.results.append(f"- {leaf.description}:\n{payload}")
+                    metrics.observe("leaf_execution", time.monotonic() - leaf_started)
+                    metrics.inc("leaves_executed")
                     await self._save_knowledge_safe(
                         description=leaf.description,
                         content=payload,
@@ -489,11 +499,14 @@ class AtomicDecompositionEngine:
         system, user_text = await self._leaf_phase_inputs(leaf)
         leaf_model = self._resolve_leaf_model(leaf)
         result = ""
+        started = time.monotonic()
         async for kind, payload in self._run_phase(system, user_text, "reasoning", model=leaf_model):
             if kind == "_phase_done":
                 result = payload
             # Sin tools activas "_tool_calls_pending" no puede aparecer; se
             # ignora cualquier otro evento intermedio a propósito.
+        metrics.observe("leaf_execution", time.monotonic() - started)
+        metrics.inc("leaves_executed")
         return result
 
     async def _execute_parallel(self) -> AsyncIterator[Event]:
@@ -532,7 +545,9 @@ class AtomicDecompositionEngine:
         self.results = []
         self.leaves = _collect_atomic_leaves(self.root)
         total = len(self.leaves)
+        metrics.inc("leaves_decomposed", total)
         parallel = self._can_run_parallel()
+        metrics.inc("parallel_executions" if parallel else "sequential_executions")
         yield (
             "progress",
             {"type": "phase_started", "phase": "execution", "leaf_count": total, "parallel": parallel},
@@ -646,8 +661,10 @@ class AtomicDecompositionEngine:
     async def run(self) -> AsyncIterator[Event]:
         yield ("progress", {"type": "phase_started", "phase": "decomposition"})
         yield ("reasoning", "Fase 1 de 3. Primero comienzo dividiendo la tarea en sus subtareas atómicas.\n\n")
+        decomp_started = time.monotonic()
         async for event in self.build_task_tree():
             yield event
+        metrics.observe("decomposition", time.monotonic() - decomp_started)
         yield (
             "progress",
             {"type": "phase_done", "phase": "decomposition", "leaf_count": len(_collect_atomic_leaves(self.root))},
@@ -669,8 +686,10 @@ class AtomicDecompositionEngine:
             "reasoning",
             "Fase 3 de 3. Listo, todas las tareas atómicas trabajadas correctamente, procedo a dar la respuesta final.\n",
         )
+        synth_started = time.monotonic()
         async for event in self.synthesize_final():
             yield event
+        metrics.observe("synthesis", time.monotonic() - synth_started)
         yield ("progress", {"type": "done"})
 
     async def resume(self, tool_outputs: dict[str, str]) -> AsyncIterator[Event]:
