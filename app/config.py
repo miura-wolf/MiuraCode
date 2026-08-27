@@ -75,6 +75,13 @@ class Settings(BaseSettings):
     # modo secuencial (la pausa/reanudación de tool_calls es secuencial).
     parallel_leaves: bool = False
 
+    # F4 — Streaming con progreso del árbol. Cuando está activo, el stream SSE
+    # emite chunks extra con un campo `progress` (phase_started/leaf_started/
+    # leaf_done/phase_done/done) para que los clientes agénticos muestren
+    # progreso real. Los clientes OpenAI estándar ignoran ese campo, así que es
+    # retrocompatible.
+    emit_progress_events: bool = False
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 

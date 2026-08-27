@@ -163,6 +163,9 @@ def _isolate_rag_settings(monkeypatch):
     # F3: ejecución paralela de hojas desactivada por defecto; los tests que la
     # necesiten la activan explícitamente.
     monkeypatch.setattr(settings, "parallel_leaves", False)
+    # F4: eventos de progreso del árbol desactivados por defecto para no alterar
+    # el SSE de los tests existentes; los tests de F4 los activan.
+    monkeypatch.setattr(settings, "emit_progress_events", False)
     yield
 
 

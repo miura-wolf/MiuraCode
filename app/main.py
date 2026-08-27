@@ -449,6 +449,9 @@ async def _stream_response(prepared: PreparedRun, lock: Optional[asyncio.Lock]):
                 elif kind == "content":
                     content_parts.append(payload)
                     yield sse.content_chunk(model, payload, chunk_id)
+                elif kind == "progress":
+                    if settings.emit_progress_events:
+                        yield sse.progress_chunk(model, payload, chunk_id)
                 elif kind == "tool_calls":
                     await _persist_session(prepared, paused=True, final_content="".join(content_parts))
                     yield sse.raw_delta_chunk(model, {"tool_calls": payload}, chunk_id)

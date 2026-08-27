@@ -1,3 +1,4 @@
+import json
 from typing import Any, Optional
 
 from .schemas import ChatCompletionChunk, ChunkChoice, DeltaMessage
@@ -62,3 +63,19 @@ def final_chunk(model: str, chunk_id: str, finish_reason: Optional[str] = "stop"
 
 def done() -> str:
     return "data: [DONE]\n\n"
+
+
+def progress_chunk(model: str, progress: dict[str, Any], chunk_id: str) -> str:
+    """F4: chunk SSE de progreso para clientes agénticos. Lleva un campo extra
+    `progress` (fuera del protocolo OpenAI estándar) que los clientes normales
+    ignoran y los agénticos pueden parsear para mostrar progreso real del árbol
+    (phase_started/leaf_started/leaf_done/phase_done/done). Se construye como
+    JSON crudo para no alterar el schema pydantic compatible con OpenAI."""
+    payload = {
+        "id": chunk_id,
+        "object": "chat.completion.chunk",
+        "model": model,
+        "choices": [],
+        "progress": progress,
+    }
+    return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"

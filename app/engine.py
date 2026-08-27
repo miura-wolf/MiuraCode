@@ -443,6 +443,10 @@ class AtomicDecompositionEngine:
                     "reasoning",
                     f"[routing] especialidad '{leaf.specialty}' → modelo '{leaf_model}'\n\n",
                 )
+            yield (
+                "progress",
+                {"type": "leaf_started", "index": i, "total": total, "description": leaf.description, "model": leaf_model},
+            )
 
             async for kind, payload in self._run_phase(system, user_text, "reasoning", model=leaf_model):
                 if kind == "_tool_calls_pending":
@@ -456,6 +460,10 @@ class AtomicDecompositionEngine:
                         description=leaf.description,
                         content=payload,
                         category="atomic_task_result",
+                    )
+                    yield (
+                        "progress",
+                        {"type": "leaf_done", "index": i, "total": total, "description": leaf.description},
                     )
                     continue
                 yield (kind, payload)
@@ -514,13 +522,22 @@ class AtomicDecompositionEngine:
                 content=result,
                 category="atomic_task_result",
             )
+            yield (
+                "progress",
+                {"type": "leaf_done", "index": index, "total": total, "description": leaf.description},
+            )
             yield ("reasoning", f"Tarea atómica {index + 1}/{total} completada: {leaf.description}\n\n")
 
     async def execute_tree(self) -> AsyncIterator[Event]:
         self.results = []
         self.leaves = _collect_atomic_leaves(self.root)
         total = len(self.leaves)
-        if self._can_run_parallel():
+        parallel = self._can_run_parallel()
+        yield (
+            "progress",
+            {"type": "phase_started", "phase": "execution", "leaf_count": total, "parallel": parallel},
+        )
+        if parallel:
             async for event in self._execute_parallel():
                 yield event
             return
@@ -602,6 +619,7 @@ class AtomicDecompositionEngine:
         return system, user_text
 
     async def synthesize_final(self) -> AsyncIterator[Event]:
+        yield ("progress", {"type": "phase_started", "phase": "synthesis"})
         system, user_text = self._synthesis_phase_inputs()
         synth_model = resolve_synthesis_model(self._model)
         self.tool_round_count = 0
@@ -626,9 +644,14 @@ class AtomicDecompositionEngine:
     # ------------------------------------------------------------------
 
     async def run(self) -> AsyncIterator[Event]:
+        yield ("progress", {"type": "phase_started", "phase": "decomposition"})
         yield ("reasoning", "Fase 1 de 3. Primero comienzo dividiendo la tarea en sus subtareas atómicas.\n\n")
         async for event in self.build_task_tree():
             yield event
+        yield (
+            "progress",
+            {"type": "phase_done", "phase": "decomposition", "leaf_count": len(_collect_atomic_leaves(self.root))},
+        )
         yield ("reasoning", "Listo, tenemos la lista completa del árbol de tareas hasta sus subtareas atómicas.\n\n")
         tree_lines = _render_tree(self.root)
         if tree_lines:
@@ -648,6 +671,7 @@ class AtomicDecompositionEngine:
         )
         async for event in self.synthesize_final():
             yield event
+        yield ("progress", {"type": "done"})
 
     async def resume(self, tool_outputs: dict[str, str]) -> AsyncIterator[Event]:
         """Reanuda un run() previamente pausado por una tool call (en una hoja
@@ -663,6 +687,7 @@ class AtomicDecompositionEngine:
             return
 
         if resuming_phase == "synthesis":
+            yield ("progress", {"type": "done"})
             return  # resume_phase ya completó la síntesis, no hay nada más
 
         yield (
@@ -671,3 +696,4 @@ class AtomicDecompositionEngine:
         )
         async for event in self.synthesize_final():
             yield event
+        yield ("progress", {"type": "done"})

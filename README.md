@@ -135,6 +135,7 @@ Variables de entorno disponibles en `.env`:
 | `UPSTREAM_RETRY_BACKOFF_SECONDS` | Espera base entre reintentos (backoff lineal) | `0.5` |
 | `FALLBACK_MODEL` | Modelo de respaldo usado en los reintentos. Vacío = el mismo modelo | *(vacío)* |
 | `PARALLEL_LEAVES` | Ejecuta en paralelo las hojas atómicas sin tools (`asyncio.gather`). Con tools vuelve a secuencial | `false` |
+| `EMIT_PROGRESS_EVENTS` | Emite chunks SSE extra con campo `progress` (progreso del árbol) para clientes agénticos | `false` |
 
 ### Endpoints de conocimiento (RAG)
 
@@ -211,10 +212,27 @@ con varias ramas sueltas). Detalles:
 - Es opt-in y asume que las subtareas no dependen entre sí; si tu tarea es una
   cadena de pasos dependientes, déjalo desactivado.
 
+### Streaming con progreso del árbol (F4)
+
+Por defecto el proxy es opaco entre request y request. Con
+`EMIT_PROGRESS_EVENTS=true`, el stream SSE emite chunks extra con un campo
+`progress` (fuera del protocolo OpenAI estándar, por lo que los clientes
+normales lo ignoran) para que los **clientes agénticos** muestren progreso real:
+
+| Evento `progress.type` | Cuándo se emite |
+|---|---|
+| `phase_started` | arranca descomposición / ejecución / síntesis (con `phase`, `leaf_count`, `parallel`) |
+| `phase_done` | termina la descomposición (con `leaf_count`) |
+| `leaf_started` | arranca una hoja atómica (con `index`, `total`, `description`, `model`) |
+| `leaf_done` | termina una hoja atómica (con `index`, `total`, `description`) |
+| `done` | el turno completó (no se emite si queda pausado en `tool_calls`) |
+
+Ejemplo de chunk: `{"object":"chat.completion.chunk","choices":[],"progress":{"type":"leaf_done","index":0,"total":2,...}}`.
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`) y la ejecución paralela de hojas (`tests/test_parallel.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`) y el streaming con progreso del árbol (`tests/test_progress.py`).

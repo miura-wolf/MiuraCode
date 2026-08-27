@@ -34,8 +34,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Routing multi-modelo por especialidad (F1)** | ✅ implementado (`app/routing.py`): cada hoja atómica va al modelo visión/código/rápido adecuado |
 | **Resiliencia: retry + fallback (F2)** | ✅ implementado (`app/upstream.py`): reintentos transitorios, modelo de respaldo y reparación de JSON de descomposición |
 | **Ejecución paralela de hojas (F3)** | ✅ implementado (`engine._execute_parallel`): hojas independientes con `asyncio.gather`, fallback a secuencial con tools |
+| **Streaming con progreso del árbol (F4)** | ✅ implementado (`sse.progress_chunk`): eventos `progress` SSE opt-in para clientes agénticos |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **99/99** pasando |
+| Tests | ✅ **105/105** pasando |
 
 ---
 
@@ -73,7 +74,7 @@ síntesis final     → Qwen3.5-4B
 - Ejecutarlas con `asyncio.gather` contra el upstream.
 - Speedup esperado 2-3x en tareas con varias ramas sueltas.
 
-### 🟡 F4 — Streaming con progreso del árbol
+### ✅ F4 — Streaming con progreso del árbol *(IMPLEMENTADO en `sse.progress_chunk` + `engine`)*
 
 - Eventos SSE adicionales: `phase_started`, `leaf_started`, `leaf_done`,
   `synthesis_started`, `done` para que clientes agénticos muestren progreso real.
@@ -142,4 +143,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia) y F3 (paralelo) implementados y testeados.*
+*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo) y F4 (streaming de progreso) implementados y testeados.*
