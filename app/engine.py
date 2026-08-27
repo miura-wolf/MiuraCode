@@ -220,7 +220,7 @@ class AtomicDecompositionEngine:
                 return
             if await knowledge_description_exists(normalized):
                 return
-            await save_learning_entry(normalized, content_text, category)
+            await save_learning_entry(normalized, content_text, category, source="auto_learn")
         except Exception:
             pass
 

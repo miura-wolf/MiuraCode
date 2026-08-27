@@ -254,6 +254,7 @@ class KnowledgeIn(BaseModel):
     description: str
     content: str
     category: str = "general"
+    source: str = "manual"
 
 
 def _ensure_admin(x_admin_token: Optional[str]) -> None:
@@ -275,7 +276,9 @@ async def post_knowledge(
     _ensure_admin(x_admin_token)
     if not payload.description.strip() or not payload.content.strip():
         raise HTTPException(status_code=422, detail="description y content son obligatorios")
-    result = await save_entry(payload.description.strip(), payload.content, payload.category)
+    result = await save_entry(
+        payload.description.strip(), payload.content, payload.category, source=payload.source
+    )
     return result
 
 

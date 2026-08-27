@@ -22,11 +22,14 @@ from .config import settings
 # Escritura (con vectorización best-effort)
 # ------------------------------------------------------------------
 
-async def save_entry(description: str, content: str, category: str = "general") -> dict[str, Any]:
+async def save_entry(
+    description: str, content: str, category: str = "general", source: str = "manual"
+) -> dict[str, Any]:
     """Guarda una entrada e intenta vectorizarla. Devuelve {"id", "embedded"}.
-    Si el embedder no está disponible, la entrada queda guardada igualmente
+    ``source`` registra la procedencia (manual/auto_learn/admin, F5). Si el
+    embedder no está disponible, la entrada queda guardada igualmente
     (participará solo por keywords)."""
-    entry_id = await db.save_knowledge(description, content, category)
+    entry_id = await db.save_knowledge(description, content, category, source=source)
     embedded = False
 
     if settings.embeddings_base_url:

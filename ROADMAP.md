@@ -35,8 +35,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Resiliencia: retry + fallback (F2)** | ✅ implementado (`app/upstream.py`): reintentos transitorios, modelo de respaldo y reparación de JSON de descomposición |
 | **Ejecución paralela de hojas (F3)** | ✅ implementado (`engine._execute_parallel`): hojas independientes con `asyncio.gather`, fallback a secuencial con tools |
 | **Streaming con progreso del árbol (F4)** | ✅ implementado (`sse.progress_chunk`): eventos `progress` SSE opt-in para clientes agénticos |
+| **Metadatos/grafo en la KB (F5)** | ✅ implementado (`db.py`): `source`, `updated_at`, `vector_updated_at`, `parent_id`, `version` + migración automática |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **105/105** pasando |
+| Tests | ✅ **111/111** pasando |
 
 ---
 
@@ -76,15 +77,17 @@ síntesis final     → Qwen3.5-4B
 
 ### ✅ F4 — Streaming con progreso del árbol *(IMPLEMENTADO en `sse.progress_chunk` + `engine`)*
 
-- Eventos SSE adicionales: `phase_started`, `leaf_started`, `leaf_done`,
-  `synthesis_started`, `done` para que clientes agénticos muestren progreso real.
-- Hoy el proxy es opaco entre request y request.
+- Eventos SSE adicionales con campo `progress`: `phase_started`, `phase_done`,
+  `leaf_started`, `leaf_done`, `done` para que clientes agénticos muestren
+  progreso real. Opt-in vía `EMIT_PROGRESS_EVENTS`; los clientes OpenAI
+  estándar ignoran el campo, así que es retrocompatible.
 
-### 🟡 F5 — Metadatos / grafo en la knowledge base
+### ✅ F5 — Metadatos / grafo en la knowledge base *(IMPLEMENTADO en `db.py`)*
 
-- Añadir a `knowledge_base`: `source`, `vector_updated_at`, `parent_id`,
-  versionado/historial de edición.
-- Permite re-backfill automático y relaciones entre conocimiento.
+- `knowledge_base` ahora guarda: `source` (manual/auto_learn), `updated_at`,
+  `vector_updated_at`, `parent_id` (grafo) y `version`.
+- Migración automática idempotente para bases creadas antes de F5.
+- `GET /v1/knowledge/stats` añade el desglose `by_source`.
 
 ### 🟢 F6 — Observabilidad / métricas
 
@@ -143,4 +146,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo) y F4 (streaming de progreso) implementados y testeados.*
+*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso) y F5 (metadatos KB) implementados y testeados.*

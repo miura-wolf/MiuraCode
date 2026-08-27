@@ -137,6 +137,22 @@ Variables de entorno disponibles en `.env`:
 | `PARALLEL_LEAVES` | Ejecuta en paralelo las hojas atómicas sin tools (`asyncio.gather`). Con tools vuelve a secuencial | `false` |
 | `EMIT_PROGRESS_EVENTS` | Emite chunks SSE extra con campo `progress` (progreso del árbol) para clientes agénticos | `false` |
 
+### Metadatos de la base de conocimiento (F5)
+
+Cada entrada de la KB guarda ahora metadatos de procedencia y ciclo de vida:
+
+| Campo | Significado |
+|---|---|
+| `source` | `manual` (POST admin), `auto_learn` (auto-aprendizaje del motor) |
+| `updated_at` | última escritura de la entrada |
+| `vector_updated_at` | cuándo se vectorizó por última vez (para saber si el vector está obsoleto) |
+| `parent_id` | relación con otra entrada (grafo de conocimiento) |
+| `version` | versión de la entrada (empieza en 1) |
+
+Las bases creadas antes de F5 se **migran automáticamente** al abrirse (ALTER
+TABLE idempotente; las filas existentes reciben los defaults). `GET
+/v1/knowledge/stats` añade el desglose `by_source`.
+
 ### Endpoints de conocimiento (RAG)
 
 Además del chat, el proxy expone administración de su base de conocimiento:
@@ -235,4 +251,4 @@ Ejemplo de chunk: `{"object":"chat.completion.chunk","choices":[],"progress":{"t
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`) y el streaming con progreso del árbol (`tests/test_progress.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`) y los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`).

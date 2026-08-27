@@ -33,7 +33,12 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
     description TEXT NOT NULL,
     category    TEXT NOT NULL DEFAULT 'general',
     content     TEXT NOT NULL,
-    created_at  REAL NOT NULL
+    created_at  REAL NOT NULL,
+    source      TEXT NOT NULL DEFAULT 'manual',
+    updated_at  REAL,
+    vector_updated_at REAL,
+    parent_id   INTEGER,
+    version     INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_base_fts USING fts5(
@@ -49,6 +54,32 @@ CREATE TABLE IF NOT EXISTS knowledge_vec (
 );
 """
 
+# F5 — columnas de metadatos de knowledge_base. Se listan aquí para la
+# migración idempotente de bases creadas antes de F5 (ALTER TABLE ADD COLUMN).
+_KNOWLEDGE_METADATA_COLUMNS = [
+    ("source", "TEXT NOT NULL DEFAULT 'manual'"),
+    ("updated_at", "REAL"),
+    ("vector_updated_at", "REAL"),
+    ("parent_id", "INTEGER"),
+    ("version", "INTEGER NOT NULL DEFAULT 1"),
+]
+
+
+async def _migrate_knowledge_metadata(conn: aiosqlite.Connection) -> None:
+    """F5: añade las columnas de metadatos a knowledge_base si no existen.
+    Idempotente y barata (un PRAGMA table_info + comprobaciones), segura para
+    bases creadas antes de F5: las filas existentes reciben los defaults."""
+    cursor = await conn.execute("PRAGMA table_info(knowledge_base)")
+    rows = await cursor.fetchall()
+    existing = {row[1] for row in rows}
+    added = False
+    for name, coltype in _KNOWLEDGE_METADATA_COLUMNS:
+        if name not in existing:
+            await conn.execute(f"ALTER TABLE knowledge_base ADD COLUMN {name} {coltype}")
+            added = True
+    if added:
+        await conn.commit()
+
 
 async def _connect() -> aiosqlite.Connection:
     """Abre una conexión a la base de datos SQLite configurada y asegura que
@@ -58,6 +89,7 @@ async def _connect() -> aiosqlite.Connection:
     conn.row_factory = aiosqlite.Row
     await conn.execute("PRAGMA busy_timeout = 5000")
     await conn.executescript(_SCHEMA_SQL)
+    await _migrate_knowledge_metadata(conn)
     return conn
 
 
@@ -67,6 +99,7 @@ async def init_db(db_path: Optional[str] = None) -> None:
     conn = await aiosqlite.connect(path)
     conn.row_factory = aiosqlite.Row
     await conn.executescript(_SCHEMA_SQL)
+    await _migrate_knowledge_metadata(conn)
     await conn.commit()
     await conn.close()
 
@@ -173,16 +206,24 @@ async def clear_sessions() -> None:
 # ------------------------------------------------------------------
 
 async def save_knowledge(
-    description: str, content: str, category: str = "general"
+    description: str,
+    content: str,
+    category: str = "general",
+    source: str = "manual",
+    parent_id: Optional[int] = None,
 ) -> int:
     """Guarda un snippet de código/solución reutilizable en la base de
-    conocimiento. Devuelve el ``id`` asignado."""
+    conocimiento. Devuelve el ``id`` asignado. ``source`` registra la
+    procedencia (manual/auto_learn/admin) y ``parent_id`` permite relacionar
+    entradas entre sí (grafo de conocimiento, F5)."""
+    now = time.time()
     conn = await _connect()
     try:
         cursor = await conn.execute(
-            "INSERT INTO knowledge_base (description, category, content, created_at) "
-            "VALUES (?, ?, ?, ?)",
-            (description, category, content, time.time()),
+            "INSERT INTO knowledge_base "
+            "(description, category, content, created_at, source, updated_at, parent_id, version) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+            (description, category, content, now, source, now, parent_id),
         )
         row_id: int = cursor.lastrowid
         await conn.execute(
@@ -308,6 +349,7 @@ async def list_knowledge(limit: int = 50, offset: int = 0) -> list[dict[str, Any
         cursor = await conn.execute(
             """
             SELECT kb.id, kb.description, kb.category, kb.content, kb.created_at,
+                   kb.source, kb.updated_at, kb.vector_updated_at, kb.parent_id, kb.version,
                    (kv.knowledge_id IS NOT NULL) AS has_vector
             FROM knowledge_base kb
             LEFT JOIN knowledge_vec kv ON kv.knowledge_id = kb.id
@@ -332,17 +374,24 @@ async def knowledge_stats() -> dict[str, Any]:
             "SELECT category, COUNT(*) AS n FROM knowledge_base GROUP BY category ORDER BY n DESC"
         )
         by_category = {r["category"]: r["n"] for r in await cat_cursor.fetchall()}
+        src_cursor = await conn.execute(
+            "SELECT source, COUNT(*) AS n FROM knowledge_base GROUP BY source ORDER BY n DESC"
+        )
+        by_source = {r["source"]: r["n"] for r in await src_cursor.fetchall()}
         return {
             "total": int(total_row[0]) if total_row else 0,
             "with_vector": int(vec_row[0]) if vec_row else 0,
             "by_category": by_category,
+            "by_source": by_source,
         }
     finally:
         await conn.close()
 
 
 async def upsert_knowledge_vec(knowledge_id: int, dim: int, blob: bytes) -> None:
-    """Guarda o actualiza el vector de una entrada."""
+    """Guarda o actualiza el vector de una entrada y marca en knowledge_base
+    cuándo se vectorizó (``vector_updated_at``, F5)."""
+    now = time.time()
     conn = await _connect()
     try:
         await conn.execute(
@@ -354,7 +403,11 @@ async def upsert_knowledge_vec(knowledge_id: int, dim: int, blob: bytes) -> None
                 vec = excluded.vec,
                 created_at = excluded.created_at
             """,
-            (knowledge_id, dim, blob, time.time()),
+            (knowledge_id, dim, blob, now),
+        )
+        await conn.execute(
+            "UPDATE knowledge_base SET vector_updated_at = ? WHERE id = ?",
+            (now, knowledge_id),
         )
         await conn.commit()
     finally:
@@ -383,7 +436,8 @@ async def get_entries_by_ids(ids: list[int]) -> dict[int, dict[str, Any]]:
     try:
         cursor = await conn.execute(
             f"""
-            SELECT kb.id, kb.description, kb.category, kb.content, kb.created_at
+            SELECT kb.id, kb.description, kb.category, kb.content, kb.created_at,
+                   kb.source, kb.updated_at, kb.vector_updated_at, kb.parent_id, kb.version
             FROM knowledge_base kb WHERE kb.id IN ({placeholders})
             """,
             tuple(int(i) for i in ids),
