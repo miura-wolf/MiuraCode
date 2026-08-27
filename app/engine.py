@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from collections.abc import AsyncIterator
@@ -459,10 +460,70 @@ class AtomicDecompositionEngine:
                     continue
                 yield (kind, payload)
 
+    def _can_run_parallel(self) -> bool:
+        """F3: la ejecución paralela de hojas solo es segura si está activada,
+        hay más de una hoja y no hay tools activas (el mecanismo de pausa/
+        reanudación de tool_calls es secuencial por construcción, así que con
+        tools se vuelve automáticamente al modo secuencial)."""
+        if not settings.parallel_leaves:
+            return False
+        if len(self.leaves) <= 1:
+            return False
+        if self._tools and self._tool_choice != "none":
+            return False
+        return True
+
+    async def _run_leaf_buffered(self, leaf: TaskNode) -> str:
+        """F3: ejecuta una hoja atómica sin tools consumiendo su stream
+        internamente y devolviendo solo el resultado final (sin retransmitir
+        cada token), para poder correr varias hojas en paralelo con
+        asyncio.gather sin interleavar el SSE de cada una."""
+        system, user_text = await self._leaf_phase_inputs(leaf)
+        leaf_model = self._resolve_leaf_model(leaf)
+        result = ""
+        async for kind, payload in self._run_phase(system, user_text, "reasoning", model=leaf_model):
+            if kind == "_phase_done":
+                result = payload
+            # Sin tools activas "_tool_calls_pending" no puede aparecer; se
+            # ignora cualquier otro evento intermedio a propósito.
+        return result
+
+    async def _execute_parallel(self) -> AsyncIterator[Event]:
+        total = len(self.leaves)
+        yield (
+            "reasoning",
+            f"Fase 2 de 3. Ejecuto las {total} tareas atómicas en paralelo.\n\n",
+        )
+        self.tool_round_count = 0
+
+        async def _run_one(index: int, leaf: TaskNode) -> tuple[int, TaskNode, str]:
+            result = await self._run_leaf_buffered(leaf)
+            return index, leaf, result
+
+        # asyncio.gather preserva el orden de los resultados según el orden de
+        # los awaitables de entrada, independientemente de cuál termine antes.
+        outcomes = await asyncio.gather(
+            *(_run_one(i, leaf) for i, leaf in enumerate(self.leaves))
+        )
+        for index, leaf, result in sorted(outcomes, key=lambda item: item[0]):
+            leaf.result = result
+            self.current_leaf_index = index
+            self.results.append(f"- {leaf.description}:\n{result}")
+            await self._save_knowledge_safe(
+                description=leaf.description,
+                content=result,
+                category="atomic_task_result",
+            )
+            yield ("reasoning", f"Tarea atómica {index + 1}/{total} completada: {leaf.description}\n\n")
+
     async def execute_tree(self) -> AsyncIterator[Event]:
         self.results = []
         self.leaves = _collect_atomic_leaves(self.root)
         total = len(self.leaves)
+        if self._can_run_parallel():
+            async for event in self._execute_parallel():
+                yield event
+            return
         yield ("reasoning", f"Fase 2 de 3. Implemento las {total} tareas atómicas.\n\n")
         async for event in self._execute_from(0):
             yield event

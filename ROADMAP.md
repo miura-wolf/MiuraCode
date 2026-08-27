@@ -33,8 +33,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | Multi-modelo **por turno** (cambiar `model` en cada request) | ✅ funciona vía `requested_model = request.model or settings.upstream_model` |
 | **Routing multi-modelo por especialidad (F1)** | ✅ implementado (`app/routing.py`): cada hoja atómica va al modelo visión/código/rápido adecuado |
 | **Resiliencia: retry + fallback (F2)** | ✅ implementado (`app/upstream.py`): reintentos transitorios, modelo de respaldo y reparación de JSON de descomposición |
+| **Ejecución paralela de hojas (F3)** | ✅ implementado (`engine._execute_parallel`): hojas independientes con `asyncio.gather`, fallback a secuencial con tools |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **94/94** pasando |
+| Tests | ✅ **99/99** pasando |
 
 ---
 
@@ -66,7 +67,7 @@ síntesis final     → Qwen3.5-4B
 - Timeout/NaN en ejecución → reintento con `FAST_MODEL` de respaldo.
 - Rollback: si el plan falla del todo, responder con la mejor respuesta parcial.
 
-### 🟠 F3 — Ejecución PARALELA de hojas atómicas independientes
+### ✅ F3 — Ejecución PARALELA de hojas atómicas independientes *(IMPLEMENTADO en `engine._execute_parallel`)*
 
 - Detectar hojas **sin dependencia** de resultado previo (gr.cpp del árbol).
 - Ejecutarlas con `asyncio.gather` contra el upstream.
@@ -141,4 +142,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing multi-modelo) y F2 (resiliencia retry/fallback) implementados y testeados.*
+*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia) y F3 (paralelo) implementados y testeados.*

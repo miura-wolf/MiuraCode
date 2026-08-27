@@ -160,6 +160,9 @@ def _isolate_rag_settings(monkeypatch):
     monkeypatch.setattr(settings, "upstream_max_retries", 2)
     monkeypatch.setattr(settings, "upstream_retry_backoff_seconds", 0.0)
     monkeypatch.setattr(settings, "fallback_model", "")
+    # F3: ejecución paralela de hojas desactivada por defecto; los tests que la
+    # necesiten la activan explícitamente.
+    monkeypatch.setattr(settings, "parallel_leaves", False)
     yield
 
 

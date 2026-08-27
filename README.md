@@ -134,6 +134,7 @@ Variables de entorno disponibles en `.env`:
 | `UPSTREAM_MAX_RETRIES` | Reintentos de transporte ante error transitorio (timeout, conexión, 5xx, 429) | `2` |
 | `UPSTREAM_RETRY_BACKOFF_SECONDS` | Espera base entre reintentos (backoff lineal) | `0.5` |
 | `FALLBACK_MODEL` | Modelo de respaldo usado en los reintentos. Vacío = el mismo modelo | *(vacío)* |
+| `PARALLEL_LEAVES` | Ejecuta en paralelo las hojas atómicas sin tools (`asyncio.gather`). Con tools vuelve a secuencial | `false` |
 
 ### Endpoints de conocimiento (RAG)
 
@@ -192,10 +193,28 @@ El proxy no se cae ante fallos puntuales del upstream:
   aun así falla, la tarea se trata como **atómica plana** (se ejecuta directa,
   sin descomponer) en vez de romper el turno.
 
+### Ejecución paralela de hojas (F3)
+
+Con `PARALLEL_LEAVES=true`, cuando una tarea se descompone en varias subtareas
+**independientes** y no hay tools activas, las hojas atómicas se ejecutan en
+paralelo con `asyncio.gather` en vez de una por una (speedup de 2-3x en tareas
+con varias ramas sueltas). Detalles:
+
+- Cada hoja paralela corre su propia llamada al upstream y su resultado se
+  recoge en el orden original para que la síntesis sea determinista.
+- El streaming token-a-token de cada hoja se sacrifica en modo paralelo (las
+  hojas se bufferizan y se emite un evento de progreso al terminar cada una);
+  la síntesis final sí sigue streameando.
+- Si hay **tools activas** o una sola hoja, el motor vuelve automáticamente al
+  modo secuencial (la pausa/reanudación de `tool_calls` es secuencial por
+  construcción).
+- Es opt-in y asume que las subtareas no dependen entre sí; si tu tarea es una
+  cadena de pasos dependientes, déjalo desactivado.
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`) y la resiliencia de reintentos/fallback (`tests/test_resilience.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`) y la ejecución paralela de hojas (`tests/test_parallel.py`).

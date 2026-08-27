@@ -67,6 +67,14 @@ class Settings(BaseSettings):
     # usan este modelo en vez del original. Vacío = reintentar con el mismo.
     fallback_model: str = ""
 
+    # F3 — Ejecución paralela de hojas atómicas independientes. Cuando está
+    # activo y no hay tools activas, las hojas atómicas se ejecutan en paralelo
+    # (asyncio.gather) en vez de secuencialmente, lo que da un speedup real en
+    # tareas con varias subtareas independientes. Asume que las subtareas no
+    # dependen unas de otras. Con tools activas se vuelve automáticamente al
+    # modo secuencial (la pausa/reanudación de tool_calls es secuencial).
+    parallel_leaves: bool = False
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 
