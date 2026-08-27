@@ -32,8 +32,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | Backfill de vectores para la KB existente | ✅ `backfill_embeddings.py` + endpoint |
 | Multi-modelo **por turno** (cambiar `model` en cada request) | ✅ funciona vía `requested_model = request.model or settings.upstream_model` |
 | **Routing multi-modelo por especialidad (F1)** | ✅ implementado (`app/routing.py`): cada hoja atómica va al modelo visión/código/rápido adecuado |
+| **Resiliencia: retry + fallback (F2)** | ✅ implementado (`app/upstream.py`): reintentos transitorios, modelo de respaldo y reparación de JSON de descomposición |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **87/87** pasando |
+| Tests | ✅ **94/94** pasando |
 
 ---
 
@@ -58,7 +59,7 @@ síntesis final     → Qwen3.5-4B
 - El engine asigna `model` por hoja en lugar de por turno.
 - La síntesis usa `DEFAULT_MODEL`.
 
-### 🔴 F2 — Fallback + retry resiliente
+### ✅ F2 — Fallback + retry resiliente *(IMPLEMENTADO en `app/upstream.py` + `app/engine.py`)*
 
 - Retry de la descomposición si el JSON llega roto (reintento con prompt
   reforzado; si sigue fallando → bajar a tarea plana / modo sin descomponer).
@@ -140,4 +141,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing multi-modelo por especialidad) implementado y testeado.*
+*Última actualización: 2026-08-27 — F1 (routing multi-modelo) y F2 (resiliencia retry/fallback) implementados y testeados.*

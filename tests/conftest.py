@@ -45,6 +45,10 @@ class FakeUpstream:
         """
         self.queue.append({"kind": "stream", "pieces": pieces or [], "tool_calls": tool_calls})
 
+    def queue_error(self, status_code: int = 500) -> None:
+        """Programa una respuesta de error HTTP (para tests de retry/fallback F2)."""
+        self.queue.append({"kind": "error", "status_code": status_code})
+
     def _pop(self) -> dict[str, Any]:
         if not self.queue:
             raise AssertionError("FakeUpstream: no hay más respuestas programadas para esta request")
@@ -54,6 +58,9 @@ class FakeUpstream:
         payload = json.loads(request.content)
         self.received.append(payload)
         programmed = self._pop()
+
+        if programmed.get("kind") == "error":
+            return httpx.Response(programmed["status_code"], text="upstream error")
 
         if payload.get("stream"):
             body = self._build_sse_body(programmed)
@@ -148,6 +155,11 @@ def _isolate_rag_settings(monkeypatch):
     monkeypatch.setattr(settings, "code_model", "")
     monkeypatch.setattr(settings, "fast_model", "")
     monkeypatch.setattr(settings, "synthesis_model", "")
+    # F2: reintentos sin espera para no ralentizar el suite y sin modelo de
+    # respaldo salvo que un test lo active explícitamente.
+    monkeypatch.setattr(settings, "upstream_max_retries", 2)
+    monkeypatch.setattr(settings, "upstream_retry_backoff_seconds", 0.0)
+    monkeypatch.setattr(settings, "fallback_model", "")
     yield
 
 

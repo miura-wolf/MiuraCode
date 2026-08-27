@@ -76,6 +76,24 @@ def _parse_decomposition(raw: str) -> dict:
     return {"atomic": True, "subtasks": []}
 
 
+def _is_valid_decomposition_json(raw: str) -> bool:
+    """True si `raw` contiene un objeto JSON parseable (aunque sea vía la
+    extracción de la primera llave). Distingue 'el modelo respondió JSON' de
+    'el modelo respondió prosa/basura', para decidir si vale la pena un
+    reintento reforzado (F2) antes de caer al fallback atómico."""
+    try:
+        return isinstance(json.loads(raw), dict)
+    except (json.JSONDecodeError, TypeError):
+        pass
+    match = re.search(r"\{.*\}", raw or "", re.DOTALL)
+    if match:
+        try:
+            return isinstance(json.loads(match.group(0)), dict)
+        except json.JSONDecodeError:
+            return False
+    return False
+
+
 def _collect_atomic_leaves(node: TaskNode) -> list[TaskNode]:
     if node.is_atomic:
         return [node]
@@ -267,6 +285,28 @@ class AtomicDecompositionEngine:
             model=self._model,
             json_mode=True,
         )
+
+        if not _is_valid_decomposition_json(raw):
+            # F2: el modelo devolvió algo que no es JSON válido. Un único
+            # reintento con formato reforzado antes de rendirse al fallback
+            # atómico de _parse_decomposition (que trata la tarea como plana).
+            yield (
+                "reasoning",
+                "La descomposición devolvió JSON inválido; reintento con formato reforzado.\n\n",
+            )
+            reinforced = user_text + (
+                "\n\nIMPORTANTE: tu respuesta anterior no fue JSON válido. Responde ÚNICAMENTE "
+                'con un objeto JSON válido de la forma {"atomic": <bool>, "subtasks": [<texto>...]}, '
+                "sin texto adicional, explicaciones ni bloques de código."
+            )
+            raw = await self._client.complete(
+                [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": self._build_user_content(reinforced)},
+                ],
+                model=self._model,
+                json_mode=True,
+            )
 
         parsed = _parse_decomposition(raw)
         subtasks = parsed.get("subtasks") or []

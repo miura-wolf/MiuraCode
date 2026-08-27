@@ -56,6 +56,17 @@ class Settings(BaseSettings):
     fast_model: str = ""
     synthesis_model: str = ""
 
+    # F2 — Resiliencia: reintentos y fallback ante fallos del upstream.
+    # Cuántos reintentos de transporte hacer ante un error transitorio
+    # (timeout, conexión, 5xx, 429). 0 = sin reintentos. El backoff es lineal:
+    # base * (intento). Los 4xx no transitorios (auth, bad request, modelo no
+    # encontrado) nunca se reintentan.
+    upstream_max_retries: int = 2
+    upstream_retry_backoff_seconds: float = 0.5
+    # Modelo de respaldo: si está configurado, los reintentos (intento > 0)
+    # usan este modelo en vez del original. Vacío = reintentar con el mismo.
+    fallback_model: str = ""
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 

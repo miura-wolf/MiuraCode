@@ -131,6 +131,9 @@ Variables de entorno disponibles en `.env`:
 | `CODE_MODEL` | Modelo para hojas de código/programación. Vacío = modelo base | *(vacío)* |
 | `FAST_MODEL` | Modelo rápido para resúmenes/traducciones/listados. Vacío = modelo base | *(vacío)* |
 | `SYNTHESIS_MODEL` | Modelo para la síntesis final. Vacío = modelo base | *(vacío)* |
+| `UPSTREAM_MAX_RETRIES` | Reintentos de transporte ante error transitorio (timeout, conexión, 5xx, 429) | `2` |
+| `UPSTREAM_RETRY_BACKOFF_SECONDS` | Espera base entre reintentos (backoff lineal) | `0.5` |
+| `FALLBACK_MODEL` | Modelo de respaldo usado en los reintentos. Vacío = el mismo modelo | *(vacío)* |
 
 ### Endpoints de conocimiento (RAG)
 
@@ -172,10 +175,27 @@ Reglas importantes:
 - Requiere un upstream que sirva varios modelos (p. ej. `llama-server` en modo
   router con `--models-max >1`).
 
+### Resiliencia: reintentos y fallback (F2)
+
+El proxy no se cae ante fallos puntuales del upstream:
+
+- **Retry de transporte** — ante un error transitorio (timeout, conexión,
+  `5xx`, `429`) reintenta hasta `UPSTREAM_MAX_RETRIES` veces con backoff lineal.
+  Los `4xx` no transitorios (auth, bad request, modelo no encontrado) **no** se
+  reintentan: reintentar no los arregla. Cubre tanto llamadas de descomposición
+  (no-streaming) como el arranque de los streams de ejecución/síntesis.
+- **Modelo de respaldo** — si `FALLBACK_MODEL` está configurado, los reintentos
+  (intento > 0) usan ese modelo en vez del original: si tu cerebro principal se
+  satura, un modelo más ligero pero disponible puede sacar el turno adelante.
+- **Reparación de JSON de descomposición** — si la Fase 1 devuelve algo que no es
+  JSON válido, se hace un único reintento con un prompt de formato reforzado; si
+  aun así falla, la tarea se trata como **atómica plana** (se ejecuta directa,
+  sin descomponer) en vez de romper el turno.
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`) y el routing multi-modelo por especialidad (`tests/test_routing.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`) y la resiliencia de reintentos/fallback (`tests/test_resilience.py`).
