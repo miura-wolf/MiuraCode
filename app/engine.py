@@ -9,6 +9,11 @@ from typing import Any, Literal, Optional
 from . import prompts
 from .config import settings
 from .content import build_multimodal_content
+from .knowledge import (
+    description_exists as knowledge_description_exists,
+)
+from .knowledge import save_entry as save_learning_entry
+from .knowledge import search_hybrid as search_knowledge_hybrid
 from .upstream import UpstreamClient
 
 Event = tuple[str, Any]  # ("reasoning" | "content", text) | ("tool_calls", list[dict])
@@ -157,6 +162,46 @@ class AtomicDecompositionEngine:
             description = fn.get("description", "")
             lines.append(f"- {name}: {description}" if description else f"- {name}")
         return "\n".join(lines)
+
+    async def _fetch_knowledge(self, query: str) -> str:
+        """Busca soluciones previas reutilizables en la base de conocimiento
+        SQLite para enriquecer el prompt de la tarea atómica."""
+        try:
+            results = await search_knowledge_hybrid(query)
+        except Exception:
+            results = []
+        if not results:
+            return "(no hay soluciones previas relevantes)"
+        parts: list[str] = []
+        for r in results:
+            parts.append(
+                f"- Descripción: {r['description']}\n"
+                f"  Categoría: {r.get('category', 'general')}\n"
+                f"  Contenido:\n{r['content']}"
+            )
+        return "\n\n".join(parts)
+
+    async def _save_knowledge_safe(
+        self, description: str, content: str, category: str = "general"
+    ) -> None:
+        """Auto-aprendizaje: guarda una solución exitosa en la base de
+        conocimiento para reutilizarla en tareas futuras similares, con tres
+        higienes básicas: desactivable por config (AUTO_LEARN_KNOWLEDGE),
+        anti-duplicado por descripción normalizada e ignora contenidos
+        trivialmente cortos (no memorizan nada útil). Nunca interrumpe el
+        flujo principal si algo falla."""
+        if not settings.auto_learn_knowledge:
+            return
+        try:
+            normalized = " ".join((description or "").split())
+            content_text = (content or "").strip()
+            if len(normalized) < 8 or len(content_text) < 20:
+                return
+            if await knowledge_description_exists(normalized):
+                return
+            await save_learning_entry(normalized, content_text, category)
+        except Exception:
+            pass
 
     def _normalize_tool_choice(self) -> tuple[list[dict[str, Any]] | None, Any]:
         """Política única de tools/tool_choice para todas las llamadas
@@ -310,15 +355,17 @@ class AtomicDecompositionEngine:
     # Fase 2: ejecución de hojas atómicas
     # ------------------------------------------------------------------
 
-    def _leaf_phase_inputs(self, leaf: TaskNode) -> tuple[str, str]:
+    async def _leaf_phase_inputs(self, leaf: TaskNode) -> tuple[str, str]:
         assert self.goal_ctx is not None
         system = self._compose_system(prompts.EXECUTE_ATOMIC_SYSTEM_PROMPT)
         context = "\n".join(self.results) if self.results else "(ninguno todavía)"
+        knowledge = await self._fetch_knowledge(leaf.description)
         user_text = prompts.EXECUTE_ATOMIC_USER_PROMPT.format(
             goal=self.goal_ctx.turn_instruction,
             prior_context=self.goal_ctx.prior_context or "(sin contexto previo)",
             context=context,
             task=leaf.description,
+            knowledge=knowledge,
         )
         return system, user_text
 
@@ -329,7 +376,7 @@ class AtomicDecompositionEngine:
             label = leaf.description if leaf.depth > 0 else "la solicitud"
             yield ("reasoning", f"Tarea atómica {i + 1}/{total}: {label}\n\n")
 
-            system, user_text = self._leaf_phase_inputs(leaf)
+            system, user_text = await self._leaf_phase_inputs(leaf)
             self.tool_round_count = 0
             self.pending_conversation = []
 
@@ -341,6 +388,11 @@ class AtomicDecompositionEngine:
                 if kind == "_phase_done":
                     leaf.result = payload
                     self.results.append(f"- {leaf.description}:\n{payload}")
+                    await self._save_knowledge_safe(
+                        description=leaf.description,
+                        content=payload,
+                        category="atomic_task_result",
+                    )
                     continue
                 yield (kind, payload)
 
@@ -379,7 +431,7 @@ class AtomicDecompositionEngine:
         if phase == "leaf":
             assert index is not None
             leaf = self.leaves[index]
-            system, user_text = self._leaf_phase_inputs(leaf)
+            system, user_text = await self._leaf_phase_inputs(leaf)
             emit_kind: Literal["reasoning", "content"] = "reasoning"
         else:
             system, user_text = self._synthesis_phase_inputs()
@@ -396,6 +448,11 @@ class AtomicDecompositionEngine:
                 if phase == "leaf":
                     leaf.result = payload
                     self.results.append(f"- {leaf.description}:\n{payload}")
+                    await self._save_knowledge_safe(
+                        description=leaf.description,
+                        content=payload,
+                        category="atomic_task_result",
+                    )
                 continue
             yield (kind, payload)
 
@@ -429,7 +486,12 @@ class AtomicDecompositionEngine:
                 yield ("tool_calls", payload["tool_calls"])
                 return
             if kind == "_phase_done":
-                continue  # el texto final ya se emitió en streaming como "content"
+                await self._save_knowledge_safe(
+                    description=self.goal_ctx.turn_instruction if self.goal_ctx else "síntesis final",
+                    content=payload,
+                    category="synthesis_result",
+                )
+                continue
             yield (kind, payload)
 
     # ------------------------------------------------------------------

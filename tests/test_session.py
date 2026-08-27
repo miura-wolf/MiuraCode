@@ -1,5 +1,24 @@
+from __future__ import annotations
+
+import pytest
+
 from app.engine import GoalContext, TaskNode
 from app.session import SessionState, is_new_turn, is_valid_resume
+
+
+@pytest.mark.asyncio
+async def test_session_store_save_and_search_knowledge():
+    from app.session import SessionStore
+
+    store = SessionStore(ttl_seconds=1800, max_sessions=200)
+    await store.save_knowledge(
+        "Test knowledge entry",
+        "def foo():\n    pass",
+        category="python",
+    )
+    results = await store.search_knowledge("test knowledge")
+    assert len(results) >= 1
+    assert any(r["description"] == "Test knowledge entry" for r in results)
 
 
 def _base_session(**overrides) -> SessionState:

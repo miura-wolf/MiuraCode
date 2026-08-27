@@ -1,0 +1,10 @@
+# Normalizar finales de línea a LF en todo el repo (evita ruido de CRLF
+# entre Windows y el clon oficial, manteniendo los diffs limpios).
+* text=auto
+*.bat text eol=crlf
+*.md text eol=lf
+*.py text eol=lf
+*.ini text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

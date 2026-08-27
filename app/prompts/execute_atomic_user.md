@@ -10,6 +10,10 @@
 {context}
 </trabajo_previo>
 
+<soluciones_previas_reutilizables>
+{knowledge}
+</soluciones_previas_reutilizables>
+
 <tarea_atomica>
 {task}
 </tarea_atomica>

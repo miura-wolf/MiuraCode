@@ -23,6 +23,27 @@ class Settings(BaseSettings):
 
     expose_reasoning_content: bool = True
 
+    database_path: str = "atomic_ai.db"
+
+    # Servidor local de embeddings (OpenAI-compatible /v1/embeddings).
+    # Vacío = la búsqueda de conocimiento usa solo keywords (FTS5).
+    embeddings_base_url: str = ""
+    embeddings_model: str = "qwen3-embedding"
+    embeddings_timeout_seconds: float = 30.0
+
+    # Búsqueda híbrida: fusiona resultados FTS5 (keywords) y similitud coseno
+    # contra vectores persistidos. Requiere embeddings_base_url configurado.
+    hybrid_search: bool = True
+    hybrid_candidates: int = 6
+
+    # Auto-aprendizaje: guardar resultados exitosos de hojas/síntesis en la
+    # base de conocimiento para reutilizarlos en tareas futuras similares.
+    auto_learn_knowledge: bool = True
+
+    # Protección opcional de los endpoints admin (/v1/knowledge*). Vacío =
+    # sin token extra (confía en localhost).
+    admin_token: str = ""
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 

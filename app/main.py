@@ -7,12 +7,14 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from pydantic import BaseModel
 
-from . import sse
+from . import db, sse
 from .config import settings
 from .content import split_content
+from .knowledge import backfill_vectors, save_entry, search_hybrid
 from .engine import AtomicDecompositionEngine, Event, GoalContext
 from .schemas import (
     ChatCompletionRequest,
@@ -248,9 +250,122 @@ async def _persist_session(prepared: PreparedRun, *, paused: bool, final_content
     await session_store.save(state)
 
 
+class KnowledgeIn(BaseModel):
+    description: str
+    content: str
+    category: str = "general"
+
+
+def _ensure_admin(x_admin_token: Optional[str]) -> None:
+    """Protección opcional de los endpoints admin (/v1/knowledge*). Si
+    ADMIN_TOKEN está definido en .env exige el header X-Admin-Token igual;
+    vacío = modo localhost-confiado (el proxy solo escucha en 127.0.0.1)."""
+    token = settings.admin_token.strip()
+    if token and x_admin_token != token:
+        raise HTTPException(status_code=403, detail="X-Admin-Token inválido o ausente")
+
+
+@app.post("/v1/knowledge", status_code=201)
+async def post_knowledge(
+    payload: KnowledgeIn,
+    x_admin_token: Optional[str] = Header(default=None),
+) -> dict:
+    """Alimenta la base de conocimiento (RAG). Si el servidor de embeddings
+    está configurado y disponible, la entrada queda también vectorizada."""
+    _ensure_admin(x_admin_token)
+    if not payload.description.strip() or not payload.content.strip():
+        raise HTTPException(status_code=422, detail="description y content son obligatorios")
+    result = await save_entry(payload.description.strip(), payload.content, payload.category)
+    return result
+
+
+@app.get("/v1/knowledge")
+async def get_knowledge(
+    q: Optional[str] = None,
+    limit: int = 10,
+    x_admin_token: Optional[str] = Header(default=None),
+) -> dict:
+    """Con ?q= busca (híbrido keywords+semántica si hay embedder); sin q,
+    lista las entradas más recientes con metadatos de curación."""
+    _ensure_admin(x_admin_token)
+    limit = max(1, min(limit, 50))
+    if q and q.strip():
+        results = await search_hybrid(q.strip(), limit=min(limit, 20))
+        return {"object": "list", "mode": "hybrid" if settings.hybrid_search else "fts", "data": results}
+    return {"object": "list", "mode": "recent", "data": await db.list_knowledge(limit=limit)}
+
+
+@app.get("/v1/knowledge/stats")
+async def get_knowledge_stats(
+    x_admin_token: Optional[str] = Header(default=None),
+) -> dict:
+    _ensure_admin(x_admin_token)
+    return await db.knowledge_stats()
+
+
+@app.post("/v1/knowledge/backfill")
+async def trigger_knowledge_backfill(
+    x_admin_token: Optional[str] = Header(default=None),
+) -> dict:
+    """Vectoriza todas las entradas que aún no tienen embedding (por ejemplo,
+    las guardadas mientras el servidor :8081 estaba apagado)."""
+    _ensure_admin(x_admin_token)
+    try:
+        stats = await backfill_vectors()
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"backfill falló: {exc}") from exc
+    return stats
+
+
+@app.delete("/v1/knowledge/{knowledge_id}")
+async def delete_knowledge_entry(
+    knowledge_id: int,
+    x_admin_token: Optional[str] = Header(default=None),
+) -> dict:
+    """Poda quirúrgica del auto-aprendizaje o de entradas erróneas."""
+    _ensure_admin(x_admin_token)
+    deleted = await db.delete_knowledge(knowledge_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="entrada no encontrada")
+    return {"deleted": knowledge_id}
+
+
 @app.get("/healthz")
 async def healthz() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/")
+async def root() -> dict:
+    return {
+        "name": "Atomic Decomposition Proxy",
+        "endpoints": {
+            "chat": "/v1/chat/completions",
+            "models": "/v1/models",
+            "health": "/healthz",
+            "knowledge": "/v1/knowledge",
+            "knowledge_stats": "/v1/knowledge/stats",
+            "knowledge_backfill": "/v1/knowledge/backfill",
+        },
+    }
+
+
+@app.get("/models")
+async def list_models_alias() -> dict:
+    return await list_models()
+
+
+@app.post("/responses")
+async def responses_not_implemented() -> JSONResponse:
+    return JSONResponse(
+        status_code=501,
+        content={
+            "error": {
+                "message": "Este proxy solo implementa /v1/chat/completions. Usa ese endpoint para enviar tus mensajes.",
+                "type": "not_implemented",
+            }
+        },
+    )
 
 
 @app.get("/v1/models")

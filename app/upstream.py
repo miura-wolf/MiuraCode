@@ -104,7 +104,10 @@ class UpstreamClient:
                     if data_str == "[DONE]":
                         break
                     chunk = json.loads(data_str)
-                    yield chunk["choices"][0]
+                    choices = chunk.get("choices") or []
+                    if not choices:
+                        continue
+                    yield choices[0]
 
     async def stream(
         self,

@@ -5,9 +5,10 @@ import hashlib
 import json
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Literal, Optional
 
+from . import db
 from .engine import GoalContext, TaskNode
 
 
@@ -92,11 +93,92 @@ def extract_tool_outputs(session: SessionState, messages: list[dict[str, Any]]) 
     return outputs
 
 
+# ------------------------------------------------------------------
+# Serialización SessionState <-> dict (para persistencia en SQLite)
+# ------------------------------------------------------------------
+
+def _tasknode_to_dict(node: TaskNode) -> dict[str, Any]:
+    return asdict(node)
+
+
+def _dict_to_tasknode(d: dict[str, Any]) -> TaskNode:
+    children_data = d.pop("children", [])
+    children = [_dict_to_tasknode(c) for c in children_data]
+    return TaskNode(children=children, **d)
+
+
+def _serialize_state(state: SessionState) -> dict[str, Any]:
+    """Convierte SessionState a un dict plano de valores JSON-serializables,
+    listo para almacenarse en la tabla ``sessions`` de SQLite."""
+    return {
+        "session_id": state.session_id,
+        "checkpoint_hash": state.checkpoint_hash,
+        "checkpoint_len": state.checkpoint_len,
+        "goal_ctx": json.dumps(asdict(state.goal_ctx), default=str),
+        "model": state.model,
+        "tools": json.dumps(state.tools, default=str),
+        "tool_choice": json.dumps(state.tool_choice, default=str),
+        "root": json.dumps(_tasknode_to_dict(state.root), default=str),
+        "leaves": json.dumps([_tasknode_to_dict(l) for l in state.leaves], default=str),
+        "results": json.dumps(state.results, default=str),
+        "pending_phase": state.pending_phase,
+        "pending_leaf_index": state.pending_leaf_index,
+        "pending_tool_calls": json.dumps(state.pending_tool_calls, default=str),
+        "pending_conversation": json.dumps(state.pending_conversation, default=str),
+        "turn_history": json.dumps(state.turn_history, default=str),
+        "tool_round_count": state.tool_round_count,
+        "updated_at": state.last_used_at,
+    }
+
+
+def _deserialize_state(row: dict[str, Any]) -> SessionState:
+    """Reconstruye SessionState a partir de una fila de la tabla ``sessions``."""
+
+    def _load_json(key: str, default: Any) -> Any:
+        val = row.get(key)
+        if val is None:
+            return default
+        try:
+            return json.loads(val)
+        except (json.JSONDecodeError, TypeError):
+            return default
+
+    goal_ctx = GoalContext(**_load_json("goal_ctx", {}))
+    root = _dict_to_tasknode(_load_json("root", {"description": "", "depth": 0}))
+    leaves = [_dict_to_tasknode(l) for l in _load_json("leaves", [])]
+
+    return SessionState(
+        session_id=row["session_id"],
+        checkpoint_hash=row.get("checkpoint_hash") or "",
+        checkpoint_len=row.get("checkpoint_len") or 0,
+        goal_ctx=goal_ctx,
+        model=row.get("model") or "",
+        tools=_load_json("tools", None),
+        tool_choice=_load_json("tool_choice", None),
+        root=root,
+        leaves=leaves,
+        results=_load_json("results", []),
+        pending_phase=row.get("pending_phase"),
+        pending_leaf_index=row.get("pending_leaf_index"),
+        pending_tool_calls=_load_json("pending_tool_calls", []),
+        pending_conversation=_load_json("pending_conversation", []),
+        turn_history=_load_json("turn_history", []),
+        tool_round_count=row.get("tool_round_count") or 0,
+        last_used_at=row.get("updated_at") or 0.0,
+    )
+
+
 class SessionStore:
     """Guarda el árbol de tareas y los resultados ya calculados entre
     peticiones HTTP, para poder reanudar un turno externo pausado por una
     tool call sin repetir la descomposición ni las tareas atómicas ya
-    resueltas."""
+    resueltas.
+
+    La fuente de verdad es la base de datos SQLite (``app/db.py``): las
+    sesiones se persisten allí al guardarlas y se cargan de vuelta en la
+    caché en memoria cuando esta está vacía (p. ej. tras un reinicio del
+    proceso). La caché ``_sessions`` sigue sirviendo como acceso rápido y
+    para la política de TTL/evicción dentro de una vida del proceso."""
 
     def __init__(self, ttl_seconds: float, max_sessions: int) -> None:
         self._ttl = ttl_seconds
@@ -104,10 +186,35 @@ class SessionStore:
         self._sessions: dict[str, SessionState] = {}
         self._lock = asyncio.Lock()
 
+    async def _load_from_db(self) -> None:
+        """Carga todas las sesiones persistidas en la BD a la caché en memoria.
+        Se llama de forma lazy cuando la caché está vacía."""
+        async with self._lock:
+            try:
+                rows = await db.list_sessions()
+            except Exception:
+                return
+            now = time.time()
+            for row in rows:
+                try:
+                    state = _deserialize_state(row)
+                except Exception:
+                    continue
+                if state.last_used_at >= now - self._ttl or self._ttl <= 0:
+                    self._sessions[state.session_id] = state
+
     async def find_matching(self, messages: list[dict[str, Any]]) -> Optional[SessionState]:
         async with self._lock:
             self._evict_expired_locked()
             candidates = list(self._sessions.values())
+
+        # Si la caché está vacía, intentar cargar desde la BD (p. ej. tras
+        # un reinicio del proceso).
+        if not candidates:
+            await self._load_from_db()
+            async with self._lock:
+                self._evict_expired_locked()
+                candidates = list(self._sessions.values())
 
         if not candidates or not messages:
             return None
@@ -125,6 +232,7 @@ class SessionStore:
 
     async def save(self, session: SessionState) -> None:
         session.last_used_at = time.time()
+        evicted: list[str] = []
         async with self._lock:
             self._sessions[session.session_id] = session
             self._evict_expired_locked()
@@ -133,6 +241,21 @@ class SessionStore:
                 oldest = sorted(self._sessions.values(), key=lambda s: s.last_used_at)
                 for stale in oldest[:overflow]:
                     self._sessions.pop(stale.session_id, None)
+                    evicted.append(stale.session_id)
+
+        # Persistir a la BD (fuera del lock para no bloquear el event loop).
+        data = _serialize_state(session)
+        try:
+            await db.save_session(session.session_id, data)
+        except Exception:
+            pass
+
+        # Limpiar la BD de las sesiones evictadas de la caché.
+        for sid in evicted:
+            try:
+                await db.delete_session(sid)
+            except Exception:
+                pass
 
     def _evict_expired_locked(self) -> None:
         if self._ttl <= 0:
@@ -141,3 +264,19 @@ class SessionStore:
         expired = [sid for sid, s in self._sessions.items() if s.last_used_at < cutoff]
         for sid in expired:
             self._sessions.pop(sid, None)
+
+    # ------------------------------------------------------------------
+    # Memoria de conocimiento reutilizable (RAG)
+    # ------------------------------------------------------------------
+
+    async def save_knowledge(
+        self, description: str, content: str, category: str = "general"
+    ) -> None:
+        """Guarda un snippet de código o solución reutilizable en la base de
+        conocimiento SQLite."""
+        await db.save_knowledge(description, content, category)
+
+    async def search_knowledge(self, query: str, limit: int = 3) -> list[dict[str, Any]]:
+        """Busca coincidencias de texto completo en la base de conocimiento
+        usando FTS5."""
+        return await db.search_knowledge(query, limit)

@@ -216,3 +216,79 @@ async def test_images_are_attached_to_every_phase(fake_upstream):
         user_content = fake_upstream.received[i]["messages"][1]["content"]
         assert isinstance(user_content, list)
         assert image_part in user_content
+
+
+async def test_knowledge_injected_into_atomic_prompt(fake_upstream):
+    from app.db import save_knowledge
+
+    await save_knowledge(
+        description="Funcion sumar en Python",
+        content="def sumar(a, b):\n    return a + b",
+        category="python",
+    )
+
+    fake_upstream.queue_completion(content='{"atomic": true, "subtasks": []}')
+    fake_upstream.queue_stream(pieces=["resultado"])
+    fake_upstream.queue_stream(pieces=["respuesta final"])
+
+    engine = _engine()
+    engine.goal_ctx = GoalContext(
+        caller_system="",
+        turn_instruction="Funcion sumar en Python",
+        prior_context="",
+    )
+
+    events = [e async for e in engine.run()]
+
+    leaf_request = fake_upstream.received[1]
+    user_content = leaf_request["messages"][1]["content"]
+    assert "soluciones_previas_reutilizables" in user_content
+    assert "sumar" in user_content
+
+
+async def test_leaf_result_saved_to_knowledge(fake_upstream):
+    from app.db import search_knowledge
+
+    fake_upstream.queue_completion(content='{"atomic": true, "subtasks": []}')
+    fake_upstream.queue_stream(pieces=["def sumar(a, b):\n    return a + b"])
+    fake_upstream.queue_stream(pieces=["respuesta final"])
+
+    engine = _engine()
+    engine.goal_ctx = GoalContext(
+        caller_system="",
+        turn_instruction="Funcion sumar en Python",
+        prior_context="",
+    )
+
+    events = [e async for e in engine.run()]
+
+    results = await search_knowledge("sumar")
+    assert len(results) >= 1
+    assert any(
+        "sumar" in r["description"].lower() or "sumar" in r.get("content", "").lower()
+        for r in results
+    )
+
+
+async def test_synthesis_result_saved_to_knowledge(fake_upstream):
+    from app.db import search_knowledge
+
+    fake_upstream.queue_completion(content='{"atomic": true, "subtasks": []}')
+    fake_upstream.queue_stream(pieces=["resultado atomico"])
+    fake_upstream.queue_stream(pieces=["respuesta final de sintesis"])
+
+    engine = _engine()
+    engine.goal_ctx = GoalContext(
+        caller_system="",
+        turn_instruction="tarea de prueba para sintesis",
+        prior_context="",
+    )
+
+    events = [e async for e in engine.run()]
+
+    results = await search_knowledge("prueba sintesis")
+    assert len(results) >= 1
+    assert any(
+        "sintesis" in r["description"].lower() or "sintesis" in r.get("content", "").lower()
+        for r in results
+    )

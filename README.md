@@ -119,6 +119,26 @@ Variables de entorno disponibles en `.env`:
 | `SESSION_TTL_SECONDS` | Tiempo de vida de una sesión pausada | `1800` |
 | `MAX_SESSIONS` | Máximo de sesiones en memoria | `200` |
 | `EXPOSE_REASONING_CONTENT` | Si se expone el proceso interno como `reasoning_content` | `true` |
+| `EMBEDDINGS_BASE_URL` | Servidor OpenAI-compatible de embeddings (`/v1/embeddings`, p. ej. llama-server con `--embedding`). Vacío = búsqueda solo por keywords | *(vacío)* |
+| `EMBEDDINGS_MODEL` | Nombre de modelo enviado al servidor de embeddings | `qwen3-embedding` |
+| `EMBEDDINGS_TIMEOUT_SECONDS` | Timeout de cada llamada al embedder | `30` |
+| `HYBRID_SEARCH` | Fusiona keywords (FTS5) + similitud coseno vía RRF en la recuperación de conocimiento | `true` |
+| `HYBRID_CANDIDATES` | Cuántos candidatos toma cada vía antes de fusionarlos | `6` |
+| `AUTO_LEARN_KNOWLEDGE` | Auto-aprendizaje: guardar hojas/síntesis exitosas en la knowledge base con dedupe | `true` |
+| `ADMIN_TOKEN` | Token exigido en header `X-Admin-Token` para `/v1/knowledge*`. Vacío = confía en localhost | *(vacío)* |
+
+### Endpoints de conocimiento (RAG)
+
+Además del chat, el proxy expone administración de su base de conocimiento:
+
+- `POST /v1/knowledge` — insertar `{description, content, category}` (vectoriza best-effort si hay embedder)
+- `GET /v1/knowledge?q=...&limit=` — búsqueda híbrida; sin `q` lista lo reciente (con flag `has_vector`)
+- `GET /v1/knowledge/stats` — total, desglose por categoría y cobertura vectorial
+- `POST /v1/knowledge/backfill` — vectoriza entradas que quedaron sin embedding
+- `DELETE /v1/knowledge/{id}` — poda quirúrgica (útil para limpiar auto-aprendizajes malos)
+
+También existe `backfill_embeddings.py` para vectorizar la KB desde consola:
+`python backfill_embeddings.py` (con el servidor de embeddings arriba).
 
 ## Tests
 
@@ -126,4 +146,4 @@ Variables de entorno disponibles en `.env`:
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas y un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`) y la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`).

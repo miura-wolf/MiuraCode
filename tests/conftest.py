@@ -124,6 +124,41 @@ def fake_upstream():
 
 
 @pytest.fixture(autouse=True)
+def _temp_database(tmp_path, monkeypatch):
+    """Aísla cada test con su propia base de datos SQLite temporal."""
+    db_path = str(tmp_path / "test_atomic_ai.db")
+    monkeypatch.setattr(settings, "database_path", db_path)
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _isolate_rag_settings(monkeypatch):
+    """Neutraliza lo que venga del .env real del desarrollador: sin embedder
+    (la búsqueda será solo FTS salvo que un test active/monkee lo contrario)
+    y admin sin token. Los tests específicos re-fijan estos valores."""
+    monkeypatch.setattr(settings, "embeddings_base_url", "")
+    monkeypatch.setattr(settings, "embeddings_model", "fake-embedder")
+    monkeypatch.setattr(settings, "hybrid_search", True)
+    monkeypatch.setattr(settings, "auto_learn_knowledge", True)
+    monkeypatch.setattr(settings, "admin_token", "")
+    yield
+
+
+@pytest.fixture(autouse=True)
+def _deterministic_decomposition_depth(monkeypatch):
+    """Fija la profundidad de descomposición en 1 para que el test suite sea
+    determinista e independiente del valor de MAX_DECOMPOSITION_DEPTH que el
+    desarrollador tenga en su .env (archivo gitignored y variable por máquina).
+
+    Los flujos de prueba del repo hacen una única descomposición (no-atómica
+    → N hojas atómicas → síntesis), que equivale a profundidad 1; con un depth
+    mayor el motor volvería a descomponer cada hoja recursivamente y el fake
+    upstream agotaría su cola de respuestas programadas."""
+    monkeypatch.setattr(settings, "max_decomposition_depth", 1)
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _reset_session_store():
     from app.main import session_store
 
