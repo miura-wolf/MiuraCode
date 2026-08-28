@@ -19,6 +19,7 @@ from .knowledge import search_hybrid as search_knowledge_hybrid
 from .metrics import metrics
 from .routing import detect_specialty, resolve_model, resolve_synthesis_model
 from .upstream import UpstreamClient
+from .web_research import web_research
 
 Event = tuple[str, Any]  # ("reasoning" | "content", text) | ("tool_calls", list[dict])
 Phase = Literal["leaf", "synthesis"]
@@ -188,24 +189,32 @@ class AtomicDecompositionEngine:
 
     async def _fetch_knowledge(self, query: str) -> str:
         """Busca soluciones previas reutilizables en la base de conocimiento
-        SQLite para enriquecer el prompt de la tarea atómica."""
+        SQLite para enriquecer el prompt de la tarea atómica. Si la KB local no
+        devuelve nada (miss) y la investigación web (F7) está activa, intenta
+        una síntesis web con citas vía Gigaxity Deep Research antes de rendirse."""
         metrics.inc("rag_queries")
         try:
             results = await search_knowledge_hybrid(query)
         except Exception:
             results = []
-        if not results:
-            metrics.inc("rag_misses")
-            return "(no hay soluciones previas relevantes)"
-        metrics.inc("rag_hits")
-        parts: list[str] = []
-        for r in results:
-            parts.append(
-                f"- Descripción: {r['description']}\n"
-                f"  Categoría: {r.get('category', 'general')}\n"
-                f"  Contenido:\n{r['content']}"
-            )
-        return "\n\n".join(parts)
+        if results:
+            metrics.inc("rag_hits")
+            parts: list[str] = []
+            for r in results:
+                parts.append(
+                    f"- Descripción: {r['description']}\n"
+                    f"  Categoría: {r.get('category', 'general')}\n"
+                    f"  Contenido:\n{r['content']}"
+                )
+            return "\n\n".join(parts)
+
+        metrics.inc("rag_misses")
+        # F7 — fallback de investigación web sobre el miss local. Devuelve None
+        # si la feature está desactivada o falla; en ese caso seguimos como antes.
+        web_block = await self._web_research_fallback(query)
+        if web_block:
+            return web_block
+        return "(no hay soluciones previas relevantes)"
 
     async def _save_knowledge_safe(
         self, description: str, content: str, category: str = "general"
@@ -226,6 +235,41 @@ class AtomicDecompositionEngine:
             if await knowledge_description_exists(normalized):
                 return
             await save_learning_entry(normalized, content_text, category, source="auto_learn")
+        except Exception:
+            pass
+
+    async def _web_research_fallback(self, query: str) -> str | None:
+        """F7 — En un miss del RAG local, lanza una investigación web (Gigaxity
+        Deep Research) y devuelve un bloque de contexto con citas listo para
+        ``{knowledge}``, o None si la feature está desactivada o falla. Nunca
+        interrumpe el flujo principal. Opcionalmente auto-aprende el resultado
+        como source='web_research' para que la próxima vez lo resuelva la KB local."""
+        try:
+            data = await web_research.research(query)
+        except Exception:
+            data = None
+        if not data:
+            return None
+        block = web_research.format_for_context(data)
+        if settings.web_research_auto_learn:
+            await self._save_web_research(query, block)
+        return block
+
+    async def _save_web_research(self, query: str, block: str) -> None:
+        """Auto-aprende una investigación web como entrada de la KB (source y
+        category 'web_research'), con las mismas higienes que
+        _save_knowledge_safe: respeta el interruptor global de auto-aprendizaje,
+        anti-duplicado por descripción normalizada y mínimo de longitud."""
+        if not (settings.auto_learn_knowledge and settings.web_research_auto_learn):
+            return
+        try:
+            normalized = " ".join((query or "").split())
+            content_text = (block or "").strip()
+            if len(normalized) < 8 or len(content_text) < 20:
+                return
+            if await knowledge_description_exists(normalized):
+                return
+            await save_learning_entry(normalized, content_text, "web_research", source="web_research")
         except Exception:
             pass
 

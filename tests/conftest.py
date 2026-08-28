@@ -171,6 +171,12 @@ def _isolate_rag_settings(monkeypatch):
     # F4: eventos de progreso del árbol desactivados por defecto para no alterar
     # el SSE de los tests existentes; los tests de F4 los activan.
     monkeypatch.setattr(settings, "emit_progress_events", False)
+    # F7: investigación web desactivada por defecto para que ningún test llame a
+    # un servicio real por culpa del .env del desarrollador; los tests de F7 la
+    # activan explícitamente apuntando a un host ficticio que solo respx conoce.
+    monkeypatch.setattr(settings, "web_research_base_url", "")
+    monkeypatch.setattr(settings, "web_research_enabled", True)
+    monkeypatch.setattr(settings, "web_research_auto_learn", True)
     yield
 
 

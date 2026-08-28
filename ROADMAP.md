@@ -37,8 +37,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Streaming con progreso del árbol (F4)** | ✅ implementado (`sse.progress_chunk`): eventos `progress` SSE opt-in para clientes agénticos |
 | **Metadatos/grafo en la KB (F5)** | ✅ implementado (`db.py`): `source`, `updated_at`, `vector_updated_at`, `parent_id`, `version` + migración automática |
 | **Observabilidad / métricas (F6)** | ✅ implementado (`app/metrics.py` + `GET /v1/stats`): contadores y latencias por fase en memoria, sin dependencias externas |
+| **Investigación web de respaldo (F7)** | ✅ implementado (`app/web_research.py`): en un miss del RAG local llama a Gigaxity Deep Research (NIM + SearXNG) e inyecta una síntesis con citas |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **117/117** pasando |
+| Tests | ✅ **128/128** pasando |
 
 ---
 
@@ -98,6 +99,20 @@ síntesis final     → Qwen3.5-4B
 - Registro en memoria, sin dependencias externas, expuesto vía `GET /v1/stats`
   (protegido por `X-Admin-Token` como el resto de endpoints admin).
 
+### ✅ F7 — Investigación web de respaldo (deep research) *(IMPLEMENTADO en `app/web_research.py` + `engine._web_research_fallback`)*
+
+- En un **miss del RAG local**, el motor llama a un servicio acompañante
+  **Gigaxity Deep Research** (`POST /api/v1/research`) que busca en la web
+  (SearXNG/Tavily/LinkUp) y sintetiza una respuesta con citas usando un modelo
+  OpenAI-compatible (NVIDIA NIM).
+- La síntesis + fuentes se inyecta en `{knowledge}` del prompt de la hoja atómica.
+- **Degradación silenciosa**: servicio caído, timeout, error o respuesta vacía
+  → se comporta exactamente como antes de la F7.
+- **Auto-aprendizaje**: la síntesis se guarda como entrada de la KB
+  (`source=web_research`) para que la próxima vez la resuelva el RAG local.
+- Métricas propias (`web_research_queries/hits/misses/errors` + latencia) en
+  `GET /v1/stats`. Despliegue del servicio: ver `../gigaxity-deep-research`.
+
 ---
 
 ## 📦 Stack local objetivo (ya definido)
@@ -149,4 +164,4 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB) y F6 (observabilidad/métricas) implementados y testeados.*
+*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB), F6 (observabilidad/métricas) y F7 (investigación web de respaldo vía Gigaxity Deep Research) implementados y testeados.*

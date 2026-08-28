@@ -136,6 +136,14 @@ Variables de entorno disponibles en `.env`:
 | `FALLBACK_MODEL` | Modelo de respaldo usado en los reintentos. Vacío = el mismo modelo | *(vacío)* |
 | `PARALLEL_LEAVES` | Ejecuta en paralelo las hojas atómicas sin tools (`asyncio.gather`). Con tools vuelve a secuencial | `false` |
 | `EMIT_PROGRESS_EVENTS` | Emite chunks SSE extra con campo `progress` (progreso del árbol) para clientes agénticos | `false` |
+| `WEB_RESEARCH_BASE_URL` | URL del servicio Gigaxity Deep Research (F7). Vacío = investigación web desactivada | *(vacío)* |
+| `WEB_RESEARCH_ENABLED` | Interruptor adicional de la investigación web (F7) | `true` |
+| `WEB_RESEARCH_TIMEOUT_SECONDS` | Timeout (s) de la llamada al servicio de investigación | `45` |
+| `WEB_RESEARCH_TOP_K` | Nº de fuentes que pide la investigación web | `8` |
+| `WEB_RESEARCH_PRESET` | Preset de investigación (`fast`/`balanced`/`deep`) | `fast` |
+| `WEB_RESEARCH_REASONING_EFFORT` | Esfuerzo de razonamiento de la síntesis (`low`/`medium`/`high`) | `medium` |
+| `WEB_RESEARCH_AUTO_LEARN` | Auto-aprende la síntesis web en la KB (`source=web_research`) | `true` |
+| `WEB_RESEARCH_MAX_CONCURRENCY` | Máximo de investigaciones web simultáneas | `2` |
 
 ### Metadatos de la base de conocimiento (F5)
 
@@ -268,10 +276,37 @@ Ejemplo: `{"uptime_s": 12.3, "counters": {"leaves_decomposed": 3, ...}, "latency
 Al ser acumuladores en memoria de un solo proceso, se reinician al reiniciar el
 proxy; es intencionalmente simple (no Prometheus) porque el proxy es local.
 
+### Investigación web de respaldo (F7)
+
+Cuando la base de conocimiento local **no tiene respuesta** para una hoja
+atómica (miss del RAG), el proxy puede llamar a un servicio acompañante
+**Gigaxity Deep Research** ([app/web_research.py](app/web_research.py)) que
+busca en la web (SearXNG/Tavily/LinkUp) y **sintetiza una respuesta con citas**
+usando un modelo OpenAI-compatible (p. ej. NVIDIA NIM). La síntesis y sus
+fuentes se inyectan en el contexto `{knowledge}` de la hoja, igual que una
+solución previa de la KB.
+
+- **Activación** — configura `WEB_RESEARCH_BASE_URL` (p. ej.
+  `http://127.0.0.1:8090`). Mientras esté vacía, la feature queda desactivada y
+  el miss se resuelve como siempre.
+- **Degradación silenciosa** — servicio caído, timeout, error HTTP o respuesta
+  vacía se traducen en "sin investigación web"; el flujo principal nunca se
+  rompe ni se bloquea.
+- **Auto-aprendizaje** — con `WEB_RESEARCH_AUTO_LEARN=true` la síntesis se
+  guarda como entrada de la KB (`source=web_research`), de modo que la próxima
+  consulta similar la resuelve el RAG local sin volver a la web.
+- **Métricas** — `web_research_queries` / `web_research_hits` /
+  `web_research_misses` / `web_research_errors` y latencia `web_research`,
+  visibles en `GET /v1/stats`.
+
+El servicio se despliega aparte (repo `gigaxity-deep-research`, puerto sugerido
+`8090`) apuntando a NVIDIA NIM para la síntesis y a una instancia SearXNG para
+la búsqueda; el proxy solo lo consume por HTTP.
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`), los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`) y la observabilidad/métricas (`tests/test_metrics.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`), los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`), la observabilidad/métricas (`tests/test_metrics.py`) y la investigación web de respaldo (`tests/test_web_research.py`).

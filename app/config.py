@@ -82,6 +82,21 @@ class Settings(BaseSettings):
     # retrocompatible.
     emit_progress_events: bool = False
 
+    # F7 — Investigación web (deep research) como fallback del RAG local. Cuando
+    # la base de conocimiento local no devuelve nada (miss), el motor llama a un
+    # servicio acompañante Gigaxity Deep Research (REST) para obtener una síntesis
+    # web con citas e inyectarla al contexto de la hoja atómica. La feature queda
+    # desactivada mientras ``web_research_base_url`` esté vacío. El servicio se
+    # despliega aparte (ver ../gigaxity-deep-research) apuntando a NIM + SearXNG.
+    web_research_base_url: str = ""
+    web_research_enabled: bool = True
+    web_research_timeout_seconds: float = 45.0
+    web_research_top_k: int = 8
+    web_research_preset: str = "fast"
+    web_research_reasoning_effort: str = "medium"
+    web_research_auto_learn: bool = True
+    web_research_max_concurrency: int = 2
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 
