@@ -138,7 +138,7 @@ Variables de entorno disponibles en `.env`:
 | `EMIT_PROGRESS_EVENTS` | Emite chunks SSE extra con campo `progress` (progreso del árbol) para clientes agénticos | `false` |
 | `WEB_RESEARCH_BASE_URL` | URL del servicio Gigaxity Deep Research (F7). Vacío = investigación web desactivada | *(vacío)* |
 | `WEB_RESEARCH_ENABLED` | Interruptor adicional de la investigación web (F7) | `true` |
-| `WEB_RESEARCH_TIMEOUT_SECONDS` | Timeout (s) de la llamada al servicio de investigación | `45` |
+| `WEB_RESEARCH_TIMEOUT_SECONDS` | Timeout (s) de la llamada al servicio de investigación | `90` |
 | `WEB_RESEARCH_TOP_K` | Nº de fuentes que pide la investigación web | `8` |
 | `WEB_RESEARCH_PRESET` | Preset de investigación (`fast`/`balanced`/`deep`) | `fast` |
 | `WEB_RESEARCH_REASONING_EFFORT` | Esfuerzo de razonamiento de la síntesis (`low`/`medium`/`high`) | `medium` |

@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     # despliega aparte (ver ../gigaxity-deep-research) apuntando a NIM + SearXNG.
     web_research_base_url: str = ""
     web_research_enabled: bool = True
-    web_research_timeout_seconds: float = 45.0
+    web_research_timeout_seconds: float = 90.0
     web_research_top_k: int = 8
     web_research_preset: str = "fast"
     web_research_reasoning_effort: str = "medium"
