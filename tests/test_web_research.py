@@ -195,3 +195,39 @@ def test_format_for_context_without_citations():
     block = WebResearchClient.format_for_context({"content": "Solo texto.", "citations": []})
     assert "Solo texto." in block
     assert "Fuentes:" not in block
+
+
+def test_format_for_context_falls_back_to_sources():
+    """Sin citas estructuradas (el modelo citó con 【N】 y Gigaxity no las parseó)
+    pero con fuentes crudas, se lista ``sources`` para no perder trazabilidad."""
+    data = {
+        "content": "Síntesis que cita con marcadores 【1】 y 【2】.",
+        "citations": [],
+        "sources": [
+            {"title": "Primera fuente", "url": "https://a.example"},
+            {"title": "", "url": "https://b.example"},
+        ],
+    }
+    block = WebResearchClient.format_for_context(data)
+    assert "Síntesis que cita con marcadores" in block
+    assert "Fuentes:" in block
+    assert "- Primera fuente — https://a.example" in block
+    assert "- https://b.example" in block
+
+
+def test_format_for_context_strips_verification_wrapper():
+    """El aviso 'verification FAILED' de Gigaxity (falso negativo) se descarta y
+    solo se inyecta la síntesis real que hay bajo el marcador."""
+    wrapped = (
+        "# Synthesis verification FAILED\n\n"
+        "This output is not a reliable synthesis:\n"
+        "- synthesis cites none of the 12 provided sources\n\n"
+        "---\n"
+        "(unverified output below, for debugging)\n\n"
+        "La síntesis útil va aquí 【1】."
+    )
+    data = {"content": wrapped, "citations": [], "sources": [{"title": "F", "url": "https://f.example"}]}
+    block = WebResearchClient.format_for_context(data)
+    assert "La síntesis útil va aquí" in block
+    assert "verification FAILED" not in block
+    assert "not a reliable synthesis" not in block

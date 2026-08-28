@@ -25,6 +25,12 @@ import httpx
 from .config import settings
 from .metrics import metrics
 
+# Gigaxity antepone este marcador cuando su quality-gate no pudo verificar las
+# citas (falso negativo habitual cuando el modelo de síntesis cita con 【N】 de
+# ancho completo y el verificador solo reconoce [N]); la síntesis útil sigue
+# debajo del marcador. Se usa para quedarse únicamente con la síntesis real.
+_UNVERIFIED_MARKER = "(unverified output below, for debugging)"
+
 
 class WebResearchClient:
     """Cliente mínimo contra ``POST /api/v1/research`` de Gigaxity."""
@@ -84,13 +90,29 @@ class WebResearchClient:
         return data
 
     @staticmethod
+    def _strip_verification_wrapper(content: str) -> str:
+        """Si Gigaxity devolvió la síntesis envuelta en su aviso de 'verification
+        FAILED' (falso negativo frecuente cuando el modelo cita con 【N】), extrae
+        la síntesis real de debajo del marcador; sin marcador, devuelve el
+        contenido tal cual. Así el prompt no recibe el encabezado 'FAILED'."""
+        idx = content.find(_UNVERIFIED_MARKER)
+        if idx == -1:
+            return content.strip()
+        return content[idx + len(_UNVERIFIED_MARKER) :].strip()
+
+    @staticmethod
     def format_for_context(data: dict[str, Any]) -> str:
         """Convierte la respuesta de Gigaxity en un bloque de texto listo para
-        inyectar en ``{knowledge}``: la síntesis con sus citas [N] y, al final,
-        la lista de fuentes (título + URL) para trazabilidad."""
-        content = (data.get("content") or "").strip()
-        citations = data.get("citations") or []
+        inyectar en ``{knowledge}``: la síntesis (limpia del aviso de verificación
+        si lo hubiera) y, al final, la lista de fuentes para trazabilidad. Usa las
+        citas estructuradas si existen; si no (p. ej. el modelo citó con 【N】 y el
+        parser de Gigaxity no las reconoció), cae a la lista cruda de ``sources``."""
+        content = WebResearchClient._strip_verification_wrapper(
+            (data.get("content") or "").strip()
+        )
         lines: list[str] = ["### Investigación web (fuentes externas, con citas)", content]
+
+        citations = data.get("citations") or []
         if citations:
             lines.append("")
             lines.append("Fuentes:")
@@ -105,6 +127,21 @@ class WebResearchClient:
                     lines.append(f"- {label}{title} — {url}")
                 elif url:
                     lines.append(f"- {label}{url}")
+            return "\n".join(lines)
+
+        sources = data.get("sources") or []
+        if sources:
+            lines.append("")
+            lines.append("Fuentes:")
+            for s in sources:
+                if not isinstance(s, dict):
+                    continue
+                title = (s.get("title") or "").strip()
+                url = (s.get("url") or "").strip()
+                if title and url:
+                    lines.append(f"- {title} — {url}")
+                elif url:
+                    lines.append(f"- {url}")
         return "\n".join(lines)
 
 
