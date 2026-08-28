@@ -264,8 +264,10 @@ admin). El snapshot incluye:
 - **Contadores** — hojas descompuestas (`leaves_decomposed`) y ejecutadas
   (`leaves_executed`), ejecuciones paralelas vs secuenciales
   (`parallel_executions` / `sequential_executions`), rondas y llamadas de tools
-  (`tool_call_rounds` / `tool_calls`) y consultas/aciertos/fallos de RAG
-  (`rag_queries` / `rag_hits` / `rag_misses`).
+  (`tool_call_rounds` / `tool_calls`), consultas/aciertos/fallos de RAG
+  (`rag_queries` / `rag_hits` / `rag_misses`) y de investigación web
+  (`web_research_queries` / `web_research_hits` / `web_research_misses` /
+  `web_research_errors`).
 - **Latencias por fase** — `decomposition`, `leaf_execution` y `synthesis`, cada
   una con `count`, `total_s`, `avg_s` y `max_s`.
 - **Estado de la KB** — el mismo desglose que `GET /v1/knowledge/stats`, bajo la
@@ -299,9 +301,55 @@ solución previa de la KB.
   `web_research_misses` / `web_research_errors` y latencia `web_research`,
   visibles en `GET /v1/stats`.
 
-El servicio se despliega aparte (repo `gigaxity-deep-research`, puerto sugerido
-`8090`) apuntando a NVIDIA NIM para la síntesis y a una instancia SearXNG para
-la búsqueda; el proxy solo lo consume por HTTP.
+#### Puesta en marcha del servicio acompañante (Gigaxity)
+
+La F7 consume por HTTP un servicio aparte, **Gigaxity Deep Research**
+(repo [`Gigaxity/gigaxity-deep-research`](https://github.com/Gigaxity/gigaxity-deep-research)).
+Pasos validados para levantarlo junto al proxy:
+
+```bash
+git clone https://github.com/Gigaxity/gigaxity-deep-research.git
+cd gigaxity-deep-research
+python -m venv .venv
+# Windows: .venv\Scripts\activate  |  Linux/macOS: source .venv/bin/activate
+pip install -e .
+cp .env.example .env    # y rellena NVIDIA_NIM_API_KEY
+python -m src.main      # FastAPI en http://127.0.0.1:8090
+```
+
+`.env` mínimo de Gigaxity (configuración con la que se validó):
+
+```env
+NVIDIA_NIM_API_KEY=<tu key de https://build.nvidia.com>
+NVIDIA_NIM_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
+SEARXNG_BASE_URL=https://search.noemaai.com
+SEARXNG_ENGINES=duckduckgo,bing,wikipedia
+PORT=8090
+```
+
+Y en el `.env` de **atomic_ai**, activa la F7 apuntando a ese servicio:
+
+```env
+WEB_RESEARCH_BASE_URL=http://127.0.0.1:8090
+```
+
+#### Notas de la validación real
+
+- **Modelo** — se usa `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` (el más
+  ligero/rápido de NIM para síntesis). El free-tier de NVIDIA NIM puede devolver
+  `503 ResourceExhausted` en picos; la F7 degrada en silencio y se reintenta en
+  el próximo miss.
+- **Búsqueda** — la instancia pública `search.noemaai.com` responde bien por
+  JSON; sus engines más fiables son `duckduckgo`, `bing` y `wikipedia`.
+- **Latencia** — una síntesis con quality-gate sobre ~10 fuentes tarda ~30-70s
+  en el free-tier; por eso `WEB_RESEARCH_TIMEOUT_SECONDS` viene en `90`.
+- **Citas** — el modelo a veces cita con corchetes de ancho completo `【N】` que
+  Gigaxity no parsea; `format_for_context` compensa cayendo a las `sources`
+  brutas, así que el contexto nunca se pierde.
+- **End-to-end** — validado en vivo: un miss del RAG local disparó la
+  investigación web y el bloque con citas se inyectó en `{knowledge}`
+  (`web_research_hits=1`, ~28s).
 
 ## Tests
 
