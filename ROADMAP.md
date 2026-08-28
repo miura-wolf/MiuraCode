@@ -16,6 +16,8 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 - Es **resiliente** ante fallos (retries, fallback a modelo de respaldo, rollback).
 - **Ejecuta en paralelo** subtareas independientes.
 - Aprende y recuerda (RAG híbrido + auto-aprendizaje — ya implementado).
+- Cuando el RAG local no tiene respuesta, **se respalda con investigación web**
+  (F7 — ya implementado y validado).
 - Muestra **progreso observable** a los clientes agénticos.
 
 ---
@@ -37,9 +39,9 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Streaming con progreso del árbol (F4)** | ✅ implementado (`sse.progress_chunk`): eventos `progress` SSE opt-in para clientes agénticos |
 | **Metadatos/grafo en la KB (F5)** | ✅ implementado (`db.py`): `source`, `updated_at`, `vector_updated_at`, `parent_id`, `version` + migración automática |
 | **Observabilidad / métricas (F6)** | ✅ implementado (`app/metrics.py` + `GET /v1/stats`): contadores y latencias por fase en memoria, sin dependencias externas |
-| **Investigación web de respaldo (F7)** | ✅ implementado (`app/web_research.py`): en un miss del RAG local llama a Gigaxity Deep Research (NIM + SearXNG) e inyecta una síntesis con citas |
+| **Investigación web de respaldo (F7)** | ✅ implementado y **validado end-to-end** (`app/web_research.py`): en un miss del RAG local llama a Gigaxity Deep Research (NIM + SearXNG) e inyecta una síntesis con citas |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **128/128** pasando |
+| Tests | ✅ **130/130** pasando |
 
 ---
 
@@ -99,7 +101,7 @@ síntesis final     → Qwen3.5-4B
 - Registro en memoria, sin dependencias externas, expuesto vía `GET /v1/stats`
   (protegido por `X-Admin-Token` como el resto de endpoints admin).
 
-### ✅ F7 — Investigación web de respaldo (deep research) *(IMPLEMENTADO en `app/web_research.py` + `engine._web_research_fallback`)*
+### ✅ F7 — Investigación web de respaldo (deep research) *(IMPLEMENTADO en `app/web_research.py` + `engine._web_research_fallback` y VALIDADO end-to-end en real)*
 
 - En un **miss del RAG local**, el motor llama a un servicio acompañante
   **Gigaxity Deep Research** (`POST /api/v1/research`) que busca en la web
@@ -112,6 +114,13 @@ síntesis final     → Qwen3.5-4B
   (`source=web_research`) para que la próxima vez la resuelva el RAG local.
 - Métricas propias (`web_research_queries/hits/misses/errors` + latencia) en
   `GET /v1/stats`. Despliegue del servicio: ver `../gigaxity-deep-research`.
+- **Validado en real** — Gigaxity corriendo en `127.0.0.1:8090` con NIM
+  (`nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`) y SearXNG
+  (`search.noemaai.com`, engines `duckduckgo/bing/wikipedia`). Un miss del RAG
+  local disparó la investigación y devolvió un bloque con citas inyectado en
+  `{knowledge}` (~28s, `web_research_hits=1`). El free-tier de NIM puede dar
+  `503 ResourceExhausted`; la F7 degrada en silencio. Pasos de despliegue y
+  notas completas: `README.md` (sección F7) y `../gigaxity-deep-research`.
 
 ---
 
@@ -158,10 +167,10 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 - Código implementado + tipado.
 - Tests nuevos (pytest) cubriendo el feature.
-- Suite completa verde (hoy 71 tests, crecerá).
+- Suite completa verde (hoy 130 tests, crecerá).
 - Documentación en `README.md` (variables y endpoints).
 - Validación manual contra llama.cpp real cuando aplique.
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB), F6 (observabilidad/métricas) y F7 (investigación web de respaldo vía Gigaxity Deep Research) implementados y testeados.*
+*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB), F6 (observabilidad/métricas) y F7 (investigación web de respaldo vía Gigaxity Deep Research) implementados y testeados; F7 además validada end-to-end en real (atomic_ai → Gigaxity → NIM/SearXNG).*
