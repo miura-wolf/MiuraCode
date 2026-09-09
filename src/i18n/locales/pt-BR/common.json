@@ -1,10 +1,10 @@
 {
 	"input": {
-		"task_prompt": "O que você quer que o Roo faça?",
+		"task_prompt": "O que você quer que o MiuraCode faça?",
 		"task_placeholder": "Digite sua tarefa aqui"
 	},
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "Uma equipe completa de desenvolvedores com IA em seu editor."
 	},
 	"number_format": {
@@ -115,8 +115,8 @@
 			"thinking_complete_safety": "(Pensamento concluído, mas a saída foi bloqueada devido às configurações de segurança.)",
 			"thinking_complete_recitation": "(Pensamento concluído, mas a saída foi bloqueada devido à verificação de recitação.)"
 		},
-		"roo": {
-			"authenticationRequired": "O provedor Roo requer autenticação na nuvem. Faça login no Roo Code Cloud."
+		"MiuraCode": {
+			"authenticationRequired": "O provedor MiuraCode requer autenticação na nuvem. Faça login no MiuraCode Cloud."
 		},
 		"api": {
 			"invalidKeyInvalidChars": "A chave API contém caracteres inválidos.",
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Sua organização requer autenticação do Roo Code Cloud. Faça login para continuar.",
-			"organization_mismatch": "Você deve estar autenticado com a conta Roo Code Cloud da sua organização.",
+			"cloud_auth_required": "Sua organização requer autenticação do MiuraCode Cloud. Faça login para continuar.",
+			"organization_mismatch": "Você deve estar autenticado com a conta MiuraCode Cloud da sua organização.",
 			"manual_url_empty": "Por favor, insira uma URL de callback válida",
 			"manual_url_no_query": "URL de callback inválida: parâmetros de consulta ausentes",
 			"manual_url_missing_params": "URL de callback inválida: parâmetros obrigatórios ausentes (code e state)",

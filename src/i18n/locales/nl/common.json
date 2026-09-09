@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "Een compleet ontwikkelteam van AI-agenten in je editor."
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(Nadenken voltooid, maar uitvoer is geblokkeerd vanwege veiligheidsinstellingen.)",
 			"thinking_complete_recitation": "(Nadenken voltooid, maar uitvoer is geblokkeerd vanwege recitatiecontrole.)"
 		},
-		"roo": {
-			"authenticationRequired": "Roo provider vereist cloud authenticatie. Log in bij Roo Code Cloud."
+		"MiuraCode": {
+			"authenticationRequired": "MiuraCode provider vereist cloud authenticatie. Log in bij MiuraCode Cloud."
 		},
 		"api": {
 			"invalidKeyInvalidChars": "API-sleutel bevat ongeldige karakters.",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "Voer een geldig pad in"
 	},
 	"input": {
-		"task_prompt": "Wat moet Roo doen?",
+		"task_prompt": "Wat moet MiuraCode doen?",
 		"task_placeholder": "Typ hier je taak"
 	},
 	"settings": {
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Je organisatie vereist Roo Code Cloud-authenticatie. Log in om door te gaan.",
-			"organization_mismatch": "Je moet geauthenticeerd zijn met het Roo Code Cloud-account van je organisatie.",
+			"cloud_auth_required": "Je organisatie vereist MiuraCode Cloud-authenticatie. Log in om door te gaan.",
+			"organization_mismatch": "Je moet geauthenticeerd zijn met het MiuraCode Cloud-account van je organisatie.",
 			"manual_url_empty": "Voer een geldige callback-URL in",
 			"manual_url_no_query": "Ongeldige callback-URL: query-parameters ontbreken",
 			"manual_url_missing_params": "Ongeldige callback-URL: vereiste parameters ontbreken (code en state)",

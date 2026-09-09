@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "आपके एडिटर में AI डेवलपर्स की पूरी टीम।"
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(सोचना पूरा हुआ, लेकिन सुरक्षा सेटिंग्स के कारण आउटपुट अवरुद्ध कर दिया गया।)",
 			"thinking_complete_recitation": "(सोचना पूरा हुआ, लेकिन पाठ जाँच के कारण आउटपुट अवरुद्ध कर दिया गया।)"
 		},
-		"roo": {
-			"authenticationRequired": "Roo प्रदाता को क्लाउड प्रमाणीकरण की आवश्यकता है। कृपया Roo Code Cloud में साइन इन करें।"
+		"MiuraCode": {
+			"authenticationRequired": "MiuraCode प्रदाता को क्लाउड प्रमाणीकरण की आवश्यकता है। कृपया MiuraCode Cloud में साइन इन करें।"
 		},
 		"api": {
 			"invalidKeyInvalidChars": "API कुंजी में अमान्य वर्ण हैं।",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "कृपया एक वैध पाथ दर्ज करें"
 	},
 	"input": {
-		"task_prompt": "Roo को क्या करना है?",
+		"task_prompt": "MiuraCode को क्या करना है?",
 		"task_placeholder": "अपना कार्य यहाँ लिखें"
 	},
 	"settings": {
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "आपके संगठन को Roo Code Cloud प्रमाणीकरण की आवश्यकता है। कृपया जारी रखने के लिए साइन इन करें।",
-			"organization_mismatch": "आपको अपने संगठन के Roo Code Cloud खाते से प्रमाणित होना होगा।",
+			"cloud_auth_required": "आपके संगठन को MiuraCode Cloud प्रमाणीकरण की आवश्यकता है। कृपया जारी रखने के लिए साइन इन करें।",
+			"organization_mismatch": "आपको अपने संगठन के MiuraCode Cloud खाते से प्रमाणित होना होगा।",
 			"manual_url_empty": "कृपया एक वैध callback URL दर्ज करें",
 			"manual_url_no_query": "अवैध callback URL: क्वेरी पैरामीटर गुम हैं",
 			"manual_url_missing_params": "अवैध callback URL: आवश्यक पैरामीटर गुम हैं (code और state)",

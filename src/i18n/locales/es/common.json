@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "Un equipo completo de desarrolladores con IA en tu editor."
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(Pensamiento completado, pero la salida fue bloqueada debido a la configuración de seguridad.)",
 			"thinking_complete_recitation": "(Pensamiento completado, pero la salida fue bloqueada debido a la comprobación de recitación.)"
 		},
-		"roo": {
-			"authenticationRequired": "El proveedor Roo requiere autenticación en la nube. Por favor, inicia sesión en Roo Code Cloud."
+		"MiuraCode": {
+			"authenticationRequired": "El proveedor MiuraCode requiere autenticación en la nube. Por favor, inicia sesión en MiuraCode Cloud."
 		},
 		"api": {
 			"invalidKeyInvalidChars": "La clave API contiene caracteres inválidos.",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "Por favor, ingresa una ruta válida"
 	},
 	"input": {
-		"task_prompt": "¿Qué debe hacer Roo?",
+		"task_prompt": "¿Qué debe hacer MiuraCode?",
 		"task_placeholder": "Escribe tu tarea aquí"
 	},
 	"settings": {
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Tu organización requiere autenticación de Roo Code Cloud. Por favor, inicia sesión para continuar.",
-			"organization_mismatch": "Debes estar autenticado con la cuenta de Roo Code Cloud de tu organización.",
+			"cloud_auth_required": "Tu organización requiere autenticación de MiuraCode Cloud. Por favor, inicia sesión para continuar.",
+			"organization_mismatch": "Debes estar autenticado con la cuenta de MiuraCode Cloud de tu organización.",
 			"verification_failed": "No se pudo verificar la autenticación de la organización."
 		},
 		"info": {

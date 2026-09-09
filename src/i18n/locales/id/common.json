@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "Tim pengembang AI lengkap di editor kamu."
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(Berpikir selesai, tetapi output diblokir karena pengaturan keamanan.)",
 			"thinking_complete_recitation": "(Berpikir selesai, tetapi output diblokir karena pemeriksaan resitasi.)"
 		},
-		"roo": {
-			"authenticationRequired": "Penyedia Roo memerlukan autentikasi cloud. Silakan masuk ke Roo Code Cloud."
+		"MiuraCode": {
+			"authenticationRequired": "Penyedia MiuraCode memerlukan autentikasi cloud. Silakan masuk ke MiuraCode Cloud."
 		},
 		"api": {
 			"invalidKeyInvalidChars": "Kunci API mengandung karakter tidak valid.",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "Silakan masukkan path yang valid"
 	},
 	"input": {
-		"task_prompt": "Apa yang harus Roo lakukan?",
+		"task_prompt": "Apa yang harus MiuraCode lakukan?",
 		"task_placeholder": "Ketik tugas kamu di sini"
 	},
 	"settings": {
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Organisasi kamu memerlukan autentikasi Roo Code Cloud. Silakan masuk untuk melanjutkan.",
-			"organization_mismatch": "Kamu harus diautentikasi dengan akun Roo Code Cloud organisasi kamu.",
+			"cloud_auth_required": "Organisasi kamu memerlukan autentikasi MiuraCode Cloud. Silakan masuk untuk melanjutkan.",
+			"organization_mismatch": "Kamu harus diautentikasi dengan akun MiuraCode Cloud organisasi kamu.",
 			"manual_url_empty": "Silakan masukkan URL callback yang valid",
 			"manual_url_no_query": "URL callback tidak valid: parameter query hilang",
 			"manual_url_missing_params": "URL callback tidak valid: parameter yang diperlukan hilang (code dan state)",

@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "Целая команда ИИ-разработчиков в вашем редакторе."
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(Размышление завершено, но вывод заблокирован настройками безопасности.)",
 			"thinking_complete_recitation": "(Размышление завершено, но вывод заблокирован проверкой цитирования.)"
 		},
-		"roo": {
-			"authenticationRequired": "Провайдер Roo требует облачной аутентификации. Войдите в Roo Code Cloud."
+		"MiuraCode": {
+			"authenticationRequired": "Провайдер MiuraCode требует облачной аутентификации. Войдите в MiuraCode Cloud."
 		},
 		"api": {
 			"invalidKeyInvalidChars": "API-ключ содержит недопустимые символы.",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "Пожалуйста, введите корректный путь"
 	},
 	"input": {
-		"task_prompt": "Что должен сделать Roo?",
+		"task_prompt": "Что должен сделать MiuraCode?",
 		"task_placeholder": "Введите вашу задачу здесь"
 	},
 	"settings": {
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Ваша организация требует аутентификации Roo Code Cloud. Войдите в систему, чтобы продолжить.",
-			"organization_mismatch": "Вы должны быть аутентифицированы с учетной записью Roo Code Cloud вашей организации.",
+			"cloud_auth_required": "Ваша организация требует аутентификации MiuraCode Cloud. Войдите в систему, чтобы продолжить.",
+			"organization_mismatch": "Вы должны быть аутентифицированы с учетной записью MiuraCode Cloud вашей организации.",
 			"manual_url_empty": "Введи действительный URL обратного вызова",
 			"manual_url_no_query": "Недействительный URL обратного вызова: отсутствуют параметры запроса",
 			"manual_url_missing_params": "Недействительный URL обратного вызова: отсутствуют обязательные параметры (code и state)",
