@@ -295,10 +295,10 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
-		tools: ["read_file", "search_files", "list_files", "codebase_search"],
+		tools: ["read_file", "search_files", "list_files"],
 	},
 	edit: {
-		tools: ["apply_diff", "write_to_file", "generate_image"],
+		tools: ["apply_diff", "write_to_file"],
 		customTools: ["edit", "search_replace", "edit_file", "apply_patch"],
 	},
 	command: {
