@@ -267,7 +267,7 @@ describe("addCustomInstructions", () => {
 	})
 
 	it("should prioritize mode-specific rules for ask mode", async () => {
-		const instructions = await addCustomInstructions("", "", "/test/path", modes[2].slug)
+		const instructions = await addCustomInstructions("", "", "/test/path", "ask")
 		expect(instructions).toMatchFileSnapshot("./__snapshots__/add-custom-instructions/ask-mode-rules.snap")
 	})
 

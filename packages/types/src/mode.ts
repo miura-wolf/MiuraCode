@@ -188,4 +188,4 @@ export const DEFAULT_MODES: readonly ModeConfig[] = [
 		description: "Write, modify, and refactor code",
 		groups: ["read", "edit", "command", "mcp"],
 	},
-	] as const
+] as const
