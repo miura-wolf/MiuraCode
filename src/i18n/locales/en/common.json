@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "A whole dev team of AI agents in your editor."
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(Thinking complete, but output was blocked due to safety settings.)",
 			"thinking_complete_recitation": "(Thinking complete, but output was blocked due to recitation check.)"
 		},
-		"roo": {
-			"authenticationRequired": "Roo provider requires cloud authentication. Please sign in to Roo Code Cloud."
+		"MiuraCode": {
+			"authenticationRequired": "MiuraCode provider requires cloud authentication. Please sign in to MiuraCode Cloud."
 		},
 		"openAiCodex": {
 			"notAuthenticated": "Not authenticated with OpenAI Codex. Please sign in using the OpenAI Codex OAuth flow.",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "Please enter a valid path"
 	},
 	"input": {
-		"task_prompt": "What should Roo do?",
+		"task_prompt": "What should MiuraCode do?",
 		"task_placeholder": "Type your task here"
 	},
 	"customModes": {
@@ -219,8 +219,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Your organization requires Roo Code Cloud authentication. Please sign in to continue.",
-			"organization_mismatch": "You must be authenticated with your organization's Roo Code Cloud account.",
+			"cloud_auth_required": "Your organization requires MiuraCode Cloud authentication. Please sign in to continue.",
+			"organization_mismatch": "You must be authenticated with your organization's MiuraCode Cloud account.",
 			"verification_failed": "Unable to verify organization authentication."
 		},
 		"info": {

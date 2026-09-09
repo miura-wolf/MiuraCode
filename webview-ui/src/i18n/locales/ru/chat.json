@@ -1,5 +1,5 @@
 {
-	"greeting": "Добро пожаловать в Roo Code",
+	"greeting": "Добро пожаловать в MiuraCode",
 	"task": {
 		"title": "Задача",
 		"expand": "Развернуть задачу",
@@ -21,7 +21,7 @@
 		"sharePublicly": "Поделиться публично",
 		"sharePubliclyDescription": "Любой, у кого есть ссылка, может получить доступ",
 		"connectToCloud": "Подключиться к облаку",
-		"connectToCloudDescription": "Войди в Roo Code Cloud, чтобы делиться задачами",
+		"connectToCloudDescription": "Войди в MiuraCode Cloud, чтобы делиться задачами",
 		"sharingDisabledByOrganization": "Обмен отключен организацией",
 		"shareSuccessOrganization": "Ссылка организации скопирована в буфер обмена",
 		"shareSuccessPublic": "Публичная ссылка скопирована в буфер обмена",
@@ -98,7 +98,7 @@
 	"enqueueMessage": "Добавить сообщение в очередь (будет отправлено после завершения текущей задачи)",
 	"scrollToBottom": "Прокрутить чат вниз",
 	"scrollToLatestCheckpoint": "Прокрутить к предыдущему чекпоинту",
-	"about": "Roo Code — это целая команда разработчиков ИИ в вашем редакторе.",
+	"about": "MiuraCode — это целая команда разработчиков ИИ в вашем редакторе.",
 	"docs": "Ознакомьтесь с нашей <DocsLink>документацией</DocsLink>, чтобы узнать больше.",
 	"onboarding": "Ваш список задач в этом рабочем пространстве пуст.",
 	"rooTips": {
@@ -121,7 +121,7 @@
 		"title": "Режимы",
 		"marketplace": "Маркетплейс режимов",
 		"settings": "Настройки режимов",
-		"description": "Специализированные персоны, которые настраивают поведение Roo.",
+		"description": "Специализированные персоны, которые настраивают поведение MiuraCode.",
 		"searchPlaceholder": "Поиск режимов...",
 		"noResults": "Ничего не найдено"
 	},
@@ -157,7 +157,7 @@
 			"500": "Ошибка сервера провайдера. На стороне провайдера что-то пошло не так, с вашим запросом все в порядке.",
 			"docs": "Документация",
 			"goToSettings": "Настройки",
-			"unknown": "Неизвестная ошибка API. Пожалуйста, свяжитесь с поддержкой Roo Code.",
+			"unknown": "Неизвестная ошибка API. Пожалуйста, свяжитесь с поддержкой MiuraCode.",
 			"connection": "Ошибка подключения. Убедитесь, что у вас есть рабочее подключение к Интернету.",
 			"claudeCodeNotAuthenticated": "Вам необходимо войти в систему, чтобы использовать Claude Code. Перейдите в Настройки и нажмите «Войти в Claude Code» для аутентификации."
 		}
@@ -182,43 +182,43 @@
 		"current": "Текущая"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo хочет получить подробные инструкции для помощи с текущей задачей"
+		"wantsToFetch": "MiuraCode хочет получить подробные инструкции для помощи с текущей задачей"
 	},
 	"fileOperations": {
-		"wantsToRead": "Roo хочет прочитать этот файл",
-		"wantsToReadOutsideWorkspace": "Roo хочет прочитать этот файл вне рабочей области",
-		"didRead": "Roo прочитал этот файл",
-		"wantsToEdit": "Roo хочет отредактировать этот файл",
-		"wantsToEditOutsideWorkspace": "Roo хочет отредактировать этот файл вне рабочей области",
-		"wantsToEditProtected": "Roo хочет отредактировать защищённый файл конфигурации",
-		"wantsToCreate": "Roo хочет создать новый файл",
-		"wantsToSearchReplace": "Roo хочет выполнить поиск и замену в этом файле",
-		"didSearchReplace": "Roo выполнил поиск и замену в этом файле",
-		"wantsToInsert": "Roo хочет вставить содержимое в этот файл",
-		"wantsToInsertWithLineNumber": "Roo хочет вставить содержимое в этот файл на строку {{lineNumber}}",
-		"wantsToInsertAtEnd": "Roo хочет добавить содержимое в конец этого файла",
-		"wantsToReadAndXMore": "Roo хочет прочитать этот файл и еще {{count}}",
-		"wantsToReadMultiple": "Roo хочет прочитать несколько файлов",
-		"wantsToApplyBatchChanges": "Roo хочет применить изменения к нескольким файлам",
-		"wantsToGenerateImage": "Roo хочет сгенерировать изображение",
-		"wantsToGenerateImageOutsideWorkspace": "Roo хочет сгенерировать изображение вне рабочего пространства",
-		"wantsToGenerateImageProtected": "Roo хочет сгенерировать изображение в защищённом месте",
-		"didGenerateImage": "Roo сгенерировал изображение"
+		"wantsToRead": "MiuraCode хочет прочитать этот файл",
+		"wantsToReadOutsideWorkspace": "MiuraCode хочет прочитать этот файл вне рабочей области",
+		"didRead": "MiuraCode прочитал этот файл",
+		"wantsToEdit": "MiuraCode хочет отредактировать этот файл",
+		"wantsToEditOutsideWorkspace": "MiuraCode хочет отредактировать этот файл вне рабочей области",
+		"wantsToEditProtected": "MiuraCode хочет отредактировать защищённый файл конфигурации",
+		"wantsToCreate": "MiuraCode хочет создать новый файл",
+		"wantsToSearchReplace": "MiuraCode хочет выполнить поиск и замену в этом файле",
+		"didSearchReplace": "MiuraCode выполнил поиск и замену в этом файле",
+		"wantsToInsert": "MiuraCode хочет вставить содержимое в этот файл",
+		"wantsToInsertWithLineNumber": "MiuraCode хочет вставить содержимое в этот файл на строку {{lineNumber}}",
+		"wantsToInsertAtEnd": "MiuraCode хочет добавить содержимое в конец этого файла",
+		"wantsToReadAndXMore": "MiuraCode хочет прочитать этот файл и еще {{count}}",
+		"wantsToReadMultiple": "MiuraCode хочет прочитать несколько файлов",
+		"wantsToApplyBatchChanges": "MiuraCode хочет применить изменения к нескольким файлам",
+		"wantsToGenerateImage": "MiuraCode хочет сгенерировать изображение",
+		"wantsToGenerateImageOutsideWorkspace": "MiuraCode хочет сгенерировать изображение вне рабочего пространства",
+		"wantsToGenerateImageProtected": "MiuraCode хочет сгенерировать изображение в защищённом месте",
+		"didGenerateImage": "MiuraCode сгенерировал изображение"
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "Roo хочет просмотреть файлы верхнего уровня в этой директории",
-		"didViewTopLevel": "Roo просмотрел файлы верхнего уровня в этой директории",
-		"wantsToViewRecursive": "Roo хочет рекурсивно просмотреть все файлы в этой директории",
-		"didViewRecursive": "Roo рекурсивно просмотрел все файлы в этой директории",
-		"wantsToSearch": "Roo хочет выполнить поиск в этой директории по <code>{{regex}}</code>",
-		"didSearch": "Roo выполнил поиск в этой директории по <code>{{regex}}</code>",
-		"wantsToSearchOutsideWorkspace": "Roo хочет выполнить поиск в этой директории (вне рабочего пространства) по <code>{{regex}}</code>",
-		"didSearchOutsideWorkspace": "Roo выполнил поиск в этой директории (вне рабочего пространства) по <code>{{regex}}</code>",
-		"wantsToViewTopLevelOutsideWorkspace": "Roo хочет просмотреть файлы верхнего уровня в этой директории (вне рабочего пространства)",
-		"didViewTopLevelOutsideWorkspace": "Roo просмотрел файлы верхнего уровня в этой директории (вне рабочего пространства)",
-		"wantsToViewRecursiveOutsideWorkspace": "Roo хочет рекурсивно просмотреть все файлы в этой директории (вне рабочего пространства)",
-		"didViewRecursiveOutsideWorkspace": "Roo рекурсивно просмотрел все файлы в этой директории (вне рабочего пространства)",
-		"wantsToViewMultipleDirectories": "Roo хочет просмотреть несколько директорий"
+		"wantsToViewTopLevel": "MiuraCode хочет просмотреть файлы верхнего уровня в этой директории",
+		"didViewTopLevel": "MiuraCode просмотрел файлы верхнего уровня в этой директории",
+		"wantsToViewRecursive": "MiuraCode хочет рекурсивно просмотреть все файлы в этой директории",
+		"didViewRecursive": "MiuraCode рекурсивно просмотрел все файлы в этой директории",
+		"wantsToSearch": "MiuraCode хочет выполнить поиск в этой директории по <code>{{regex}}</code>",
+		"didSearch": "MiuraCode выполнил поиск в этой директории по <code>{{regex}}</code>",
+		"wantsToSearchOutsideWorkspace": "MiuraCode хочет выполнить поиск в этой директории (вне рабочего пространства) по <code>{{regex}}</code>",
+		"didSearchOutsideWorkspace": "MiuraCode выполнил поиск в этой директории (вне рабочего пространства) по <code>{{regex}}</code>",
+		"wantsToViewTopLevelOutsideWorkspace": "MiuraCode хочет просмотреть файлы верхнего уровня в этой директории (вне рабочего пространства)",
+		"didViewTopLevelOutsideWorkspace": "MiuraCode просмотрел файлы верхнего уровня в этой директории (вне рабочего пространства)",
+		"wantsToViewRecursiveOutsideWorkspace": "MiuraCode хочет рекурсивно просмотреть все файлы в этой директории (вне рабочего пространства)",
+		"didViewRecursiveOutsideWorkspace": "MiuraCode рекурсивно просмотрел все файлы в этой директории (вне рабочего пространства)",
+		"wantsToViewMultipleDirectories": "MiuraCode хочет просмотреть несколько директорий"
 	},
 	"commandOutput": "Вывод команды",
 	"commandExecution": {
@@ -247,18 +247,18 @@
 		"youSaid": "Вы сказали"
 	},
 	"mcp": {
-		"wantsToUseTool": "Roo хочет использовать инструмент на сервере MCP {{serverName}}",
-		"wantsToAccessResource": "Roo хочет получить доступ к ресурсу на сервере MCP {{serverName}}"
+		"wantsToUseTool": "MiuraCode хочет использовать инструмент на сервере MCP {{serverName}}",
+		"wantsToAccessResource": "MiuraCode хочет получить доступ к ресурсу на сервере MCP {{serverName}}"
 	},
 	"modes": {
-		"wantsToSwitch": "Roo хочет переключиться в режим {{mode}}",
-		"wantsToSwitchWithReason": "Roo хочет переключиться в режим {{mode}}, потому что: {{reason}}",
-		"didSwitch": "Roo переключился в режим {{mode}}",
-		"didSwitchWithReason": "Roo переключился в режим {{mode}}, потому что: {{reason}}"
+		"wantsToSwitch": "MiuraCode хочет переключиться в режим {{mode}}",
+		"wantsToSwitchWithReason": "MiuraCode хочет переключиться в режим {{mode}}, потому что: {{reason}}",
+		"didSwitch": "MiuraCode переключился в режим {{mode}}",
+		"didSwitchWithReason": "MiuraCode переключился в режим {{mode}}, потому что: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo хочет создать новую подзадачу в режиме {{mode}}",
-		"wantsToFinish": "Roo хочет завершить эту подзадачу",
+		"wantsToCreate": "MiuraCode хочет создать новую подзадачу в режиме {{mode}}",
+		"wantsToFinish": "MiuraCode хочет завершить эту подзадачу",
 		"newTaskContent": "Инструкции по подзадаче",
 		"completionContent": "Подзадача завершена",
 		"resultContent": "Результаты подзадачи",
@@ -267,7 +267,7 @@
 		"goToSubtask": "Просмотреть задачу"
 	},
 	"questions": {
-		"hasQuestion": "У Roo есть вопрос"
+		"hasQuestion": "У MiuraCode есть вопрос"
 	},
 	"taskCompleted": "Задача завершена",
 	"error": "Ошибка",
@@ -281,14 +281,14 @@
 	"diffError": {
 		"title": "Не удалось выполнить редактирование"
 	},
-	"troubleMessage": "У Roo возникли проблемы...",
+	"troubleMessage": "У MiuraCode возникли проблемы...",
 	"errorDetails": {
 		"link": "Подробности",
 		"title": "Детали ошибки",
 		"copyToClipboard": "Скопировать в буфер обмена",
 		"copied": "Скопировано!",
 		"diagnostics": "Получить подробную информацию об ошибке",
-		"proxyProvider": "Похоже, ты используешь провайдера на основе прокси. Убедись, что ты проверил его логи и что он не переписывает запросы Roo."
+		"proxyProvider": "Похоже, ты используешь провайдера на основе прокси. Убедись, что ты проверил его логи и что он не переписывает запросы MiuraCode."
 	},
 	"powershell": {
 		"issues": "Похоже, у вас проблемы с Windows PowerShell, пожалуйста, ознакомьтесь с этим"
@@ -312,23 +312,23 @@
 		"triggerLabelAll": "BRRR"
 	},
 	"announcement": {
-		"title": "Выпущен Roo Code {{version}}",
-		"support": "Поддержите Roo Code, поставив нам звезду на <githubLink>GitHub</githubLink>.",
+		"title": "Выпущен MiuraCode {{version}}",
+		"support": "Поддержите MiuraCode, поставив нам звезду на <githubLink>GitHub</githubLink>.",
 		"stealthModel": {
-			"feature": "<bold>Бесплатная скрытая модель на ограниченное время</bold> - Code Supernova: Теперь обновлена до <bold>контекстного окна 1M токенов</bold>! Универсальная модель агентного программирования, поддерживающая ввод изображений, доступная через Roo Code Cloud.",
+			"feature": "<bold>Бесплатная скрытая модель на ограниченное время</bold> - Code Supernova: Теперь обновлена до <bold>контекстного окна 1M токенов</bold>! Универсальная модель агентного программирования, поддерживающая ввод изображений, доступная через MiuraCode Cloud.",
 			"note": "(Примечание: промпты и дополнения записываются создателем модели и используются для её улучшения)",
-			"connectButton": "Подключиться к Roo Code Cloud",
-			"selectModel": "Выберите <code>roo/code-supernova</code> от провайдера Roo Code Cloud в Настройках для начала работы.",
+			"connectButton": "Подключиться к MiuraCode Cloud",
+			"selectModel": "Выберите <code>MiuraCode/code-supernova</code> от провайдера MiuraCode Cloud в Настройках для начала работы.",
 			"goToSettingsButton": "Перейти к Настройкам"
 		},
 		"handoff": {
-			"heading": "Плагин Roo Code никуда не денется.",
-			"description": "Возможно, ты видел недавнее объявление о том, что Roo Code достиг 3 миллионов установок, а оригинальная команда полностью переключается на Roomote. Мы понимаем, что эта новость была непростой для многих из вас. Этот плагин много значит для нас и для тебя, и мы тебя слышим. Хорошая новость: <bold>команда сообщества взяла на себя задачу продолжать развивать Roo Code</bold>, и мы работаем с ними над официальной передачей, чтобы плагин, на который ты полагаешься, продолжал получать поддержку и улучшения.",
+			"heading": "Плагин MiuraCode никуда не денется.",
+			"description": "Возможно, ты видел недавнее объявление о том, что MiuraCode достиг 3 миллионов установок, а оригинальная команда полностью переключается на Roomote. Мы понимаем, что эта новость была непростой для многих из вас. Этот плагин много значит для нас и для тебя, и мы тебя слышим. Хорошая новость: <bold>команда сообщества взяла на себя задачу продолжать развивать MiuraCode</bold>, и мы работаем с ними над официальной передачей, чтобы плагин, на который ты полагаешься, продолжал получать поддержку и улучшения.",
 			"readMore": "Прочитать оригинальное объявление Matt Rubens"
 		},
 		"release": {
 			"heading": "Что нового:",
-			"gpt55": "GPT-5.5 через OpenAI Codex: Добавлена поддержка GPT-5.5 в провайдере OpenAI Codex, чтобы ты мог использовать новейшую модель прямо из Roo Code.",
+			"gpt55": "GPT-5.5 через OpenAI Codex: Добавлена поддержка GPT-5.5 в провайдере OpenAI Codex, чтобы ты мог использовать новейшую модель прямо из MiuraCode.",
 			"claudeOpus47": "Claude Opus 4.7 в Vertex AI: Добавлен Claude Opus 4.7 в провайдер Vertex AI — новейшую флагманскую модель рассуждений от Anthropic.",
 			"checkpointNav": "Навигация по предыдущим контрольным точкам: Добавлены элементы управления в чат, чтобы переходить назад по предыдущим контрольным точкам, с полной поддержкой i18n."
 		},
@@ -359,8 +359,8 @@
 		}
 	},
 	"skill": {
-		"wantsToLoad": "Roo хочет загрузить навык",
-		"didLoad": "Roo загрузил навык"
+		"wantsToLoad": "MiuraCode хочет загрузить навык",
+		"didLoad": "MiuraCode загрузил навык"
 	},
 	"followUpSuggest": {
 		"copyToInput": "Скопировать во ввод (то же, что shift + клик)",
@@ -381,13 +381,13 @@
 	"profileViolationWarning": "Текущий профиль несовместим с настройками вашей организации",
 	"shellIntegration": {
 		"title": "Предупреждение о выполнении команды",
-		"description": "Ваша команда выполняется без интеграции оболочки терминала VSCode. Чтобы скрыть это предупреждение, вы можете отключить интеграцию оболочки в разделе <strong>Terminal</strong> в <settingsLink>настройках Roo Code</settingsLink> или устранить проблемы с интеграцией терминала VSCode, используя ссылку ниже.",
+		"description": "Ваша команда выполняется без интеграции оболочки терминала VSCode. Чтобы скрыть это предупреждение, вы можете отключить интеграцию оболочки в разделе <strong>Terminal</strong> в <settingsLink>настройках MiuraCode</settingsLink> или устранить проблемы с интеграцией терминала VSCode, используя ссылку ниже.",
 		"troubleshooting": "Нажмите здесь для просмотра документации по интеграции оболочки."
 	},
 	"ask": {
 		"autoApprovedRequestLimitReached": {
 			"title": "Достигнут лимит автоматически одобренных запросов",
-			"description": "Roo достиг автоматически одобренного лимита в {{count}} API-запрос(ов). Хотите сбросить счетчик и продолжить задачу?",
+			"description": "MiuraCode достиг автоматически одобренного лимита в {{count}} API-запрос(ов). Хотите сбросить счетчик и продолжить задачу?",
 			"button": "Сбросить и продолжить"
 		},
 		"autoApprovedCostLimitReached": {
@@ -397,8 +397,8 @@
 		}
 	},
 	"codebaseSearch": {
-		"wantsToSearch": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code>",
-		"wantsToSearchWithPath": "Roo хочет выполнить поиск в кодовой базе по <code>{{query}}</code> в <code>{{path}}</code>",
+		"wantsToSearch": "MiuraCode хочет выполнить поиск в кодовой базе по <code>{{query}}</code>",
+		"wantsToSearchWithPath": "MiuraCode хочет выполнить поиск в кодовой базе по <code>{{query}}</code> в <code>{{path}}</code>",
 		"didSearch_one": "Найден 1 результат",
 		"didSearch_other": "Найдено {{count}} результатов",
 		"resultTooltip": "Оценка схожести: {{score}} (нажмите, чтобы открыть файл)"
@@ -439,7 +439,7 @@
 		"ariaLabel": "Версия {{version}} - Нажмите, чтобы просмотреть примечания к выпуску"
 	},
 	"rooCloudCTA": {
-		"title": "Roo Code Cloud развивается!",
+		"title": "MiuraCode Cloud развивается!",
 		"description": "Запускайте удаленные агенты в облаке, получайте доступ к своим задачам из любого места, сотрудничайте с другими и многое другое.",
 		"joinWaitlist": "Зарегистрируйтесь, чтобы получать последние обновления."
 	},
@@ -480,8 +480,8 @@
 		"clickToEdit": "Нажмите, чтобы редактировать сообщение"
 	},
 	"slashCommand": {
-		"wantsToRun": "Roo хочет выполнить слеш-команду",
-		"didRun": "Roo выполнил слеш-команду"
+		"wantsToRun": "MiuraCode хочет выполнить слеш-команду",
+		"didRun": "MiuraCode выполнил слеш-команду"
 	},
 	"todo": {
 		"partial": "{{completed}} из {{total}} задач выполнено",
@@ -500,11 +500,11 @@
 		"openMcpSettings": "Открыть настройки MCP"
 	},
 	"readCommandOutput": {
-		"title": "Roo read command output"
+		"title": "MiuraCode read command output"
 	},
 	"retiredProvider": {
 		"title": "Провайдер больше не поддерживается",
-		"message": "К сожалению, этот провайдер больше не поддерживается. Мы заметили, что очень немногие пользователи Roo действительно им пользовались, и нам нужно сократить объём кодовой базы, чтобы продолжать быстро развиваться и хорошо служить нашему сообществу. Это было очень непростое решение, но оно позволяет нам сосредоточиться на том, что для тебя важнее всего. Мы знаем, что это неприятно.",
+		"message": "К сожалению, этот провайдер больше не поддерживается. Мы заметили, что очень немногие пользователи MiuraCode действительно им пользовались, и нам нужно сократить объём кодовой базы, чтобы продолжать быстро развиваться и хорошо служить нашему сообществу. Это было очень непростое решение, но оно позволяет нам сосредоточиться на том, что для тебя важнее всего. Мы знаем, что это неприятно.",
 		"openSettings": "Открыть настройки"
 	}
 }

@@ -1,8 +1,8 @@
 {
-	"name": "roo-cline",
+	"name": "miuracode",
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
-	"publisher": "RooVeterinaryInc",
+	"publisher": "miuracode",
 	"version": "3.53.0",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
@@ -14,11 +14,11 @@
 		"node": "20.19.2"
 	},
 	"author": {
-		"name": "Roo Code"
+		"name": "MiuraCode"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/RooCodeInc/Roo-Code"
+		"url": "https://github.com/miura-wolf/MiuraCode"
 	},
 	"homepage": "https://roocode.com",
 	"categories": [

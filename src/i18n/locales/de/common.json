@@ -1,6 +1,6 @@
 {
 	"extension": {
-		"name": "Roo Code",
+		"name": "MiuraCode",
 		"description": "Ein komplettes Entwicklerteam mit KI in deinem Editor."
 	},
 	"number_format": {
@@ -111,8 +111,8 @@
 			"thinking_complete_safety": "(Denken abgeschlossen, aber die Ausgabe wurde aufgrund von Sicherheitseinstellungen blockiert.)",
 			"thinking_complete_recitation": "(Denken abgeschlossen, aber die Ausgabe wurde aufgrund der Rezitationsprüfung blockiert.)"
 		},
-		"roo": {
-			"authenticationRequired": "Roo-Anbieter erfordert Cloud-Authentifizierung. Bitte melde dich bei Roo Code Cloud an."
+		"MiuraCode": {
+			"authenticationRequired": "MiuraCode-Anbieter erfordert Cloud-Authentifizierung. Bitte melde dich bei MiuraCode Cloud an."
 		},
 		"openAiCodex": {
 			"notAuthenticated": "Nicht bei OpenAI Codex authentifiziert. Bitte melde dich über den OpenAI Codex OAuth-Flow an.",
@@ -192,7 +192,7 @@
 		"enter_valid_path": "Bitte gib einen gültigen Pfad ein"
 	},
 	"input": {
-		"task_prompt": "Was soll Roo tun?",
+		"task_prompt": "Was soll MiuraCode tun?",
 		"task_placeholder": "Gib deine Aufgabe hier ein"
 	},
 	"settings": {
@@ -222,8 +222,8 @@
 	},
 	"mdm": {
 		"errors": {
-			"cloud_auth_required": "Deine Organisation erfordert eine Roo Code Cloud-Authentifizierung. Bitte melde dich an, um fortzufahren.",
-			"organization_mismatch": "Du musst mit dem Roo Code Cloud-Konto deiner Organisation authentifiziert sein.",
+			"cloud_auth_required": "Deine Organisation erfordert eine MiuraCode Cloud-Authentifizierung. Bitte melde dich an, um fortzufahren.",
+			"organization_mismatch": "Du musst mit dem MiuraCode Cloud-Konto deiner Organisation authentifiziert sein.",
 			"verification_failed": "Die Organisationsauthentifizierung konnte nicht verifiziert werden."
 		},
 		"info": {

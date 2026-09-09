@@ -1,5 +1,5 @@
 {
-	"greeting": "Benvingut a Roo Code",
+	"greeting": "Benvingut a MiuraCode",
 	"task": {
 		"title": "Tasca",
 		"expand": "Expandir tasca",
@@ -21,7 +21,7 @@
 		"sharePublicly": "Compartir públicament",
 		"sharePubliclyDescription": "Qualsevol amb l'enllaç pot accedir",
 		"connectToCloud": "Connecta al núvol",
-		"connectToCloudDescription": "Inicia sessió a Roo Code Cloud per compartir tasques",
+		"connectToCloudDescription": "Inicia sessió a MiuraCode Cloud per compartir tasques",
 		"sharingDisabledByOrganization": "Compartició deshabilitada per l'organització",
 		"shareSuccessOrganization": "Enllaç d'organització copiat al porta-retalls",
 		"shareSuccessPublic": "Enllaç públic copiat al porta-retalls",
@@ -98,7 +98,7 @@
 	"enqueueMessage": "Afegeix el missatge a la cua (s'enviarà quan acabi la tasca actual)",
 	"scrollToBottom": "Desplaça't al final del xat",
 	"scrollToLatestCheckpoint": "Desplaça't al checkpoint anterior",
-	"about": "Roo Code és tot un equip de desenvolupament d'IA al teu editor.",
+	"about": "MiuraCode és tot un equip de desenvolupament d'IA al teu editor.",
 	"docs": "Consulta els nostres <DocsLink>documents</DocsLink> per a més informació.",
 	"onboarding": "La teva llista de tasques en aquest espai de treball està buida.",
 	"rooTips": {
@@ -130,7 +130,7 @@
 		"title": "Modes",
 		"marketplace": "Marketplace de Modes",
 		"settings": "Configuració de Modes",
-		"description": "Personalitats especialitzades que adapten el comportament de Roo.",
+		"description": "Personalitats especialitzades que adapten el comportament de MiuraCode.",
 		"searchPlaceholder": "Cerca modes...",
 		"noResults": "No s'han trobat resultats"
 	},
@@ -144,7 +144,7 @@
 	"diffError": {
 		"title": "Edició fallida"
 	},
-	"troubleMessage": "Roo està tenint problemes...",
+	"troubleMessage": "MiuraCode està tenint problemes...",
 	"apiRequest": {
 		"title": "Sol·licitud API",
 		"failed": "Sol·licitud API ha fallat",
@@ -162,7 +162,7 @@
 			"500": "Error del servidor del proveïdor. Quelcom va malament del costat del proveïdor, no hi ha res de malament amb la teva sol·licitud.",
 			"docs": "Documentació",
 			"goToSettings": "Configuració",
-			"unknown": "Error API desconegut. Si us plau contacta amb el suport de Roo Code.",
+			"unknown": "Error API desconegut. Si us plau contacta amb el suport de MiuraCode.",
 			"connection": "Error de connexió. Assegureu-vos que teniu una connexió a Internet funcional.",
 			"claudeCodeNotAuthenticated": "Has d'iniciar sessió per utilitzar Claude Code. Vés a Configuració i fes clic a \"Iniciar sessió a Claude Code\" per autenticar-te."
 		}
@@ -187,43 +187,43 @@
 		"current": "Actual"
 	},
 	"instructions": {
-		"wantsToFetch": "Roo vol obtenir instruccions detallades per ajudar amb la tasca actual."
+		"wantsToFetch": "MiuraCode vol obtenir instruccions detallades per ajudar amb la tasca actual."
 	},
 	"fileOperations": {
-		"wantsToRead": "Roo vol llegir aquest fitxer",
-		"wantsToReadOutsideWorkspace": "Roo vol llegir aquest fitxer fora de l'espai de treball",
-		"didRead": "Roo ha llegit aquest fitxer",
-		"wantsToEdit": "Roo vol editar aquest fitxer",
-		"wantsToEditOutsideWorkspace": "Roo vol editar aquest fitxer fora de l'espai de treball",
-		"wantsToEditProtected": "Roo vol editar un fitxer de configuració protegit",
-		"wantsToCreate": "Roo vol crear un nou fitxer",
-		"wantsToSearchReplace": "Roo vol realitzar cerca i substitució en aquest fitxer",
-		"didSearchReplace": "Roo ha realitzat cerca i substitució en aquest fitxer",
-		"wantsToInsert": "Roo vol inserir contingut en aquest fitxer",
-		"wantsToInsertWithLineNumber": "Roo vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer",
-		"wantsToInsertAtEnd": "Roo vol afegir contingut al final d'aquest fitxer",
-		"wantsToReadAndXMore": "En Roo vol llegir aquest fitxer i {{count}} més",
-		"wantsToReadMultiple": "Roo vol llegir diversos fitxers",
-		"wantsToApplyBatchChanges": "Roo vol aplicar canvis a múltiples fitxers",
-		"wantsToGenerateImage": "Roo vol generar una imatge",
-		"wantsToGenerateImageOutsideWorkspace": "Roo vol generar una imatge fora de l'espai de treball",
-		"wantsToGenerateImageProtected": "Roo vol generar una imatge en una ubicació protegida",
-		"didGenerateImage": "Roo ha generat una imatge"
+		"wantsToRead": "MiuraCode vol llegir aquest fitxer",
+		"wantsToReadOutsideWorkspace": "MiuraCode vol llegir aquest fitxer fora de l'espai de treball",
+		"didRead": "MiuraCode ha llegit aquest fitxer",
+		"wantsToEdit": "MiuraCode vol editar aquest fitxer",
+		"wantsToEditOutsideWorkspace": "MiuraCode vol editar aquest fitxer fora de l'espai de treball",
+		"wantsToEditProtected": "MiuraCode vol editar un fitxer de configuració protegit",
+		"wantsToCreate": "MiuraCode vol crear un nou fitxer",
+		"wantsToSearchReplace": "MiuraCode vol realitzar cerca i substitució en aquest fitxer",
+		"didSearchReplace": "MiuraCode ha realitzat cerca i substitució en aquest fitxer",
+		"wantsToInsert": "MiuraCode vol inserir contingut en aquest fitxer",
+		"wantsToInsertWithLineNumber": "MiuraCode vol inserir contingut a la línia {{lineNumber}} d'aquest fitxer",
+		"wantsToInsertAtEnd": "MiuraCode vol afegir contingut al final d'aquest fitxer",
+		"wantsToReadAndXMore": "En MiuraCode vol llegir aquest fitxer i {{count}} més",
+		"wantsToReadMultiple": "MiuraCode vol llegir diversos fitxers",
+		"wantsToApplyBatchChanges": "MiuraCode vol aplicar canvis a múltiples fitxers",
+		"wantsToGenerateImage": "MiuraCode vol generar una imatge",
+		"wantsToGenerateImageOutsideWorkspace": "MiuraCode vol generar una imatge fora de l'espai de treball",
+		"wantsToGenerateImageProtected": "MiuraCode vol generar una imatge en una ubicació protegida",
+		"didGenerateImage": "MiuraCode ha generat una imatge"
 	},
 	"directoryOperations": {
-		"wantsToViewTopLevel": "Roo vol veure els fitxers de nivell superior en aquest directori",
-		"didViewTopLevel": "Roo ha vist els fitxers de nivell superior en aquest directori",
-		"wantsToViewRecursive": "Roo vol veure recursivament tots els fitxers en aquest directori",
-		"didViewRecursive": "Roo ha vist recursivament tots els fitxers en aquest directori",
-		"wantsToSearch": "Roo vol cercar en aquest directori <code>{{regex}}</code>",
-		"didSearch": "Roo ha cercat en aquest directori <code>{{regex}}</code>",
-		"wantsToSearchOutsideWorkspace": "Roo vol cercar en aquest directori (fora de l'espai de treball) <code>{{regex}}</code>",
-		"didSearchOutsideWorkspace": "Roo ha cercat en aquest directori (fora de l'espai de treball) <code>{{regex}}</code>",
-		"wantsToViewTopLevelOutsideWorkspace": "Roo vol veure els fitxers de nivell superior en aquest directori (fora de l'espai de treball)",
-		"didViewTopLevelOutsideWorkspace": "Roo ha vist els fitxers de nivell superior en aquest directori (fora de l'espai de treball)",
-		"wantsToViewRecursiveOutsideWorkspace": "Roo vol veure recursivament tots els fitxers en aquest directori (fora de l'espai de treball)",
-		"didViewRecursiveOutsideWorkspace": "Roo ha vist recursivament tots els fitxers en aquest directori (fora de l'espai de treball)",
-		"wantsToViewMultipleDirectories": "Roo vol veure diversos directoris"
+		"wantsToViewTopLevel": "MiuraCode vol veure els fitxers de nivell superior en aquest directori",
+		"didViewTopLevel": "MiuraCode ha vist els fitxers de nivell superior en aquest directori",
+		"wantsToViewRecursive": "MiuraCode vol veure recursivament tots els fitxers en aquest directori",
+		"didViewRecursive": "MiuraCode ha vist recursivament tots els fitxers en aquest directori",
+		"wantsToSearch": "MiuraCode vol cercar en aquest directori <code>{{regex}}</code>",
+		"didSearch": "MiuraCode ha cercat en aquest directori <code>{{regex}}</code>",
+		"wantsToSearchOutsideWorkspace": "MiuraCode vol cercar en aquest directori (fora de l'espai de treball) <code>{{regex}}</code>",
+		"didSearchOutsideWorkspace": "MiuraCode ha cercat en aquest directori (fora de l'espai de treball) <code>{{regex}}</code>",
+		"wantsToViewTopLevelOutsideWorkspace": "MiuraCode vol veure els fitxers de nivell superior en aquest directori (fora de l'espai de treball)",
+		"didViewTopLevelOutsideWorkspace": "MiuraCode ha vist els fitxers de nivell superior en aquest directori (fora de l'espai de treball)",
+		"wantsToViewRecursiveOutsideWorkspace": "MiuraCode vol veure recursivament tots els fitxers en aquest directori (fora de l'espai de treball)",
+		"didViewRecursiveOutsideWorkspace": "MiuraCode ha vist recursivament tots els fitxers en aquest directori (fora de l'espai de treball)",
+		"wantsToViewMultipleDirectories": "MiuraCode vol veure diversos directoris"
 	},
 	"commandOutput": "Sortida de la comanda",
 	"commandExecution": {
@@ -245,24 +245,24 @@
 	"response": "Resposta",
 	"arguments": "Arguments",
 	"text": {
-		"rooSaid": "En Roo ha dit"
+		"rooSaid": "En MiuraCode ha dit"
 	},
 	"feedback": {
 		"youSaid": "Has dit"
 	},
 	"mcp": {
-		"wantsToUseTool": "Roo vol utilitzar una eina al servidor MCP {{serverName}}",
-		"wantsToAccessResource": "Roo vol accedir a un recurs al servidor MCP {{serverName}}"
+		"wantsToUseTool": "MiuraCode vol utilitzar una eina al servidor MCP {{serverName}}",
+		"wantsToAccessResource": "MiuraCode vol accedir a un recurs al servidor MCP {{serverName}}"
 	},
 	"modes": {
-		"wantsToSwitch": "Roo vol canviar a mode <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo vol canviar a mode <code>{{mode}}</code> perquè: {{reason}}",
-		"didSwitch": "Roo ha canviat a mode <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo ha canviat a mode <code>{{mode}}</code> perquè: {{reason}}"
+		"wantsToSwitch": "MiuraCode vol canviar a mode <code>{{mode}}</code>",
+		"wantsToSwitchWithReason": "MiuraCode vol canviar a mode <code>{{mode}}</code> perquè: {{reason}}",
+		"didSwitch": "MiuraCode ha canviat a mode <code>{{mode}}</code>",
+		"didSwitchWithReason": "MiuraCode ha canviat a mode <code>{{mode}}</code> perquè: {{reason}}"
 	},
 	"subtasks": {
-		"wantsToCreate": "Roo vol crear una nova subtasca en mode <code>{{mode}}</code>",
-		"wantsToFinish": "Roo vol finalitzar aquesta subtasca",
+		"wantsToCreate": "MiuraCode vol crear una nova subtasca en mode <code>{{mode}}</code>",
+		"wantsToFinish": "MiuraCode vol finalitzar aquesta subtasca",
 		"newTaskContent": "Instruccions de la subtasca",
 		"completionContent": "Subtasca completada",
 		"resultContent": "Resultats de la subtasca",
@@ -271,7 +271,7 @@
 		"goToSubtask": "Veure tasca"
 	},
 	"questions": {
-		"hasQuestion": "Roo té una pregunta"
+		"hasQuestion": "MiuraCode té una pregunta"
 	},
 	"taskCompleted": "Tasca completada",
 	"modelResponseIncomplete": "Resposta del model incompleta",
@@ -287,7 +287,7 @@
 		"copyToClipboard": "Copiar al porta-retalls",
 		"copied": "Copiat!",
 		"diagnostics": "Obtenir informació d'error detallada",
-		"proxyProvider": "Sembla que estàs utilitzant un proveïdor basat en proxy. Assegura't de comprovar els seus registres i de garantir que no estàs reescrivint les sol·licituds de Roo."
+		"proxyProvider": "Sembla que estàs utilitzant un proveïdor basat en proxy. Assegura't de comprovar els seus registres i de garantir que no estàs reescrivint les sol·licituds de MiuraCode."
 	},
 	"powershell": {
 		"issues": "Sembla que estàs tenint problemes amb Windows PowerShell, si us plau consulta aquesta documentació per a més informació."
@@ -330,31 +330,31 @@
 		}
 	},
 	"skill": {
-		"wantsToLoad": "En Roo vol carregar una habilitat",
-		"didLoad": "En Roo ha carregat una habilitat"
+		"wantsToLoad": "En MiuraCode vol carregar una habilitat",
+		"didLoad": "En MiuraCode ha carregat una habilitat"
 	},
 	"followUpSuggest": {
 		"copyToInput": "Copiar a l'entrada (o Shift + clic)",
 		"timerPrefix": "Aprovació automàtica habilitada. Seleccionant en {{seconds}}s…"
 	},
 	"announcement": {
-		"title": "Roo Code {{version}} Llançat",
-		"support": "Si us plau, dona suport a Roo Code fent una estrella al nostre <githubLink>GitHub</githubLink>.",
+		"title": "MiuraCode {{version}} Llançat",
+		"support": "Si us plau, dona suport a MiuraCode fent una estrella al nostre <githubLink>GitHub</githubLink>.",
 		"stealthModel": {
-			"feature": "<bold>Model stealth GRATUÏT per temps limitat</bold> - Code Supernova: Ara actualitzat amb una <bold>finestra de context d'1M tokens</bold>! Un model de codificació agèntica versàtil que suporta entrades d'imatges, disponible a través de Roo Code Cloud.",
+			"feature": "<bold>Model stealth GRATUÏT per temps limitat</bold> - Code Supernova: Ara actualitzat amb una <bold>finestra de context d'1M tokens</bold>! Un model de codificació agèntica versàtil que suporta entrades d'imatges, disponible a través de MiuraCode Cloud.",
 			"note": "(Nota: els prompts i completacions són registrats pel creador del model i utilitzats per millorar-lo)",
-			"connectButton": "Connectar a Roo Code Cloud",
-			"selectModel": "Selecciona <code>roo/code-supernova</code> del proveïdor Roo Code Cloud a Configuració per començar.",
+			"connectButton": "Connectar a MiuraCode Cloud",
+			"selectModel": "Selecciona <code>MiuraCode/code-supernova</code> del proveïdor MiuraCode Cloud a Configuració per començar.",
 			"goToSettingsButton": "Anar a Configuració"
 		},
 		"handoff": {
-			"heading": "El plugin Roo Code no desapareix.",
-			"description": "Potser has vist l'anunci recent que Roo Code ha arribat a 3 milions d'instal·lacions i que l'equip original es bolca completament amb Roomote. Sabem que aquesta notícia ha estat dura per a molts de vosaltres. Aquest plugin ens importa molt, tant a nosaltres com a tu, i t'escoltem. La bona notícia: <bold>un equip de la comunitat ha donat un pas endavant per portar Roo Code cap endavant</bold>, i estem treballant amb ells en un relleu oficial perquè el plugin en què confies continuï rebent manteniment i millores.",
+			"heading": "El plugin MiuraCode no desapareix.",
+			"description": "Potser has vist l'anunci recent que MiuraCode ha arribat a 3 milions d'instal·lacions i que l'equip original es bolca completament amb Roomote. Sabem que aquesta notícia ha estat dura per a molts de vosaltres. Aquest plugin ens importa molt, tant a nosaltres com a tu, i t'escoltem. La bona notícia: <bold>un equip de la comunitat ha donat un pas endavant per portar MiuraCode cap endavant</bold>, i estem treballant amb ells en un relleu oficial perquè el plugin en què confies continuï rebent manteniment i millores.",
 			"readMore": "Llegir l'anunci original de Matt Rubens"
 		},
 		"release": {
 			"heading": "Què hi ha de nou:",
-			"gpt55": "GPT-5.5 via OpenAI Codex: S'ha afegit suport per a GPT-5.5 al proveïdor OpenAI Codex perquè puguis utilitzar el model més recent directament des de Roo Code.",
+			"gpt55": "GPT-5.5 via OpenAI Codex: S'ha afegit suport per a GPT-5.5 al proveïdor OpenAI Codex perquè puguis utilitzar el model més recent directament des de MiuraCode.",
 			"claudeOpus47": "Claude Opus 4.7 a Vertex AI: S'ha afegit Claude Opus 4.7 al proveïdor Vertex AI, el nou model de raonament emblemàtic d'Anthropic.",
 			"checkpointNav": "Navegació per Checkpoints Anteriors: S'han afegit controls al xat per tornar enrere pels checkpoints previs, amb suport complet d'i18n."
 		},
@@ -380,24 +380,24 @@
 	"profileViolationWarning": "El perfil actual no és compatible amb la configuració de la teva organització",
 	"shellIntegration": {
 		"title": "Advertència d'execució d'ordres",
-		"description": "La teva ordre s'està executant sense la integració de shell del terminal VSCode. Per suprimir aquest advertiment, pots desactivar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de Roo Code</settingsLink> o solucionar problemes d'integració del terminal VSCode utilitzant l'enllaç a continuació.",
+		"description": "La teva ordre s'està executant sense la integració de shell del terminal VSCode. Per suprimir aquest advertiment, pots desactivar la integració de shell a la secció <strong>Terminal</strong> de la <settingsLink>configuració de MiuraCode</settingsLink> o solucionar problemes d'integració del terminal VSCode utilitzant l'enllaç a continuació.",
 		"troubleshooting": "Fes clic aquí per a la documentació d'integració de shell."
 	},
 	"ask": {
 		"autoApprovedRequestLimitReached": {
 			"title": "S'ha arribat al límit de sol·licituds aprovades automàticament",
-			"description": "Roo ha arribat al límit aprovat automàticament de {{count}} sol·licitud(s) d'API. Vols reiniciar el comptador i continuar amb la tasca?",
+			"description": "MiuraCode ha arribat al límit aprovat automàticament de {{count}} sol·licitud(s) d'API. Vols reiniciar el comptador i continuar amb la tasca?",
 			"button": "Reiniciar i continuar"
 		},
 		"autoApprovedCostLimitReached": {
 			"title": "S'ha arribat al límit de cost d'aprovació automàtica",
 			"button": "Restableix i continua",
-			"description": "Roo ha arribat al límit de cost aprovat automàticament de ${{count}}. Vols restablir el cost i continuar amb la tasca?"
+			"description": "MiuraCode ha arribat al límit de cost aprovat automàticament de ${{count}}. Vols restablir el cost i continuar amb la tasca?"
 		}
 	},
 	"codebaseSearch": {
-		"wantsToSearch": "Roo vol cercar a la base de codi <code>{{query}}</code>",
-		"wantsToSearchWithPath": "Roo vol cercar a la base de codi <code>{{query}}</code> a <code>{{path}}</code>",
+		"wantsToSearch": "MiuraCode vol cercar a la base de codi <code>{{query}}</code>",
+		"wantsToSearchWithPath": "MiuraCode vol cercar a la base de codi <code>{{query}}</code> a <code>{{path}}</code>",
 		"didSearch_one": "S'ha trobat 1 resultat",
 		"didSearch_other": "S'han trobat {{count}} resultats",
 		"resultTooltip": "Puntuació de similitud: {{score}} (fes clic per obrir el fitxer)"
@@ -438,7 +438,7 @@
 		"ariaLabel": "Versió {{version}} - Feu clic per veure les notes de llançament"
 	},
 	"rooCloudCTA": {
-		"title": "Roo Code Cloud està evolucionant!",
+		"title": "MiuraCode Cloud està evolucionant!",
 		"description": "Executa agents remots al núvol, accedeix a les teves tasques des de qualsevol lloc, col·labora amb altres i molt més.",
 		"joinWaitlist": "Registra't per rebre les últimes actualitzacions."
 	},
@@ -473,8 +473,8 @@
 		"clickToEdit": "Feu clic per editar el missatge"
 	},
 	"slashCommand": {
-		"wantsToRun": "Roo vol executar una comanda slash",
-		"didRun": "Roo ha executat una comanda slash"
+		"wantsToRun": "MiuraCode vol executar una comanda slash",
+		"didRun": "MiuraCode ha executat una comanda slash"
 	},
 	"contextMenu": {
 		"noResults": "Sense resultats",
@@ -499,11 +499,11 @@
 		"openMcpSettings": "Obrir configuració de MCP"
 	},
 	"readCommandOutput": {
-		"title": "Roo read command output"
+		"title": "MiuraCode read command output"
 	},
 	"retiredProvider": {
 		"title": "Proveïdor ja no compatible",
-		"message": "Ho sentim, aquest proveïdor ja no és compatible. Hem vist molt pocs usuaris de Roo que realment l'utilitzaven i necessitem reduir l'abast del nostre codi per poder seguir avançant ràpidament i servir bé la nostra comunitat en aquest espai. Va ser una decisió molt difícil, però ens permet centrar-nos en el que més t'importa. Ho sabem, és una llàstima.",
+		"message": "Ho sentim, aquest proveïdor ja no és compatible. Hem vist molt pocs usuaris de MiuraCode que realment l'utilitzaven i necessitem reduir l'abast del nostre codi per poder seguir avançant ràpidament i servir bé la nostra comunitat en aquest espai. Va ser una decisió molt difícil, però ens permet centrar-nos en el que més t'importa. Ho sabem, és una llàstima.",
 		"openSettings": "Obrir configuració"
 	}
 }
