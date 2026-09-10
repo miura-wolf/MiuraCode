@@ -51,6 +51,19 @@ logs
 # Qdrant
 qdrant_storage/
 
+# Servicios Python locales (services/atomic-ai, services/gigaxity)
+services/**/.venv/
+services/**/venv/
+services/**/__pycache__/
+services/**/*.pyc
+services/**/.pytest_cache/
+services/**/*.db
+services/**/*.db-wal
+services/**/*.db-shm
+services/**/.env
+services/**/server.*.log
+services/**/research_result.json
+
 # Architect plans
 plans/
 

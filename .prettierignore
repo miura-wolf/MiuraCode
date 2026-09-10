@@ -1,0 +1,7 @@
+# Python services vendored into the monorepo are formatted with their own
+# tooling (black/ruff conventions, long docstrings); prettier must not touch
+# them — nor the lockfiles or generated assets.
+services/**
+pnpm-lock.yaml
+**/dist/**
+**/out/**
