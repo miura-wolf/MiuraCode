@@ -1,4 +1,5 @@
 export * from "./anthropic.js"
+export * from "./atomic-ai.js"
 export * from "./baseten.js"
 export * from "./bedrock.js"
 export * from "./deepseek.js"
@@ -25,8 +26,10 @@ export * from "./xai.js"
 export * from "./vercel-ai-gateway.js"
 export * from "./zai.js"
 export * from "./minimax.js"
+export * from "./poolside.js"
 
 import { anthropicDefaultModelId } from "./anthropic.js"
+import { atomicAiDefaultModelId } from "./atomic-ai.js"
 import { basetenDefaultModelId } from "./baseten.js"
 import { bedrockDefaultModelId } from "./bedrock.js"
 import { deepSeekDefaultModelId } from "./deepseek.js"
@@ -49,6 +52,7 @@ import { xaiDefaultModelId } from "./xai.js"
 import { vercelAiGatewayDefaultModelId } from "./vercel-ai-gateway.js"
 import { internationalZAiDefaultModelId, mainlandZAiDefaultModelId } from "./zai.js"
 import { minimaxDefaultModelId } from "./minimax.js"
+import { poolsideDefaultModelId } from "./poolside.js"
 
 // Import the ProviderName type from provider-settings to avoid duplication
 import type { ProviderName } from "../provider-settings.js"
@@ -103,6 +107,10 @@ export function getProviderDefaultModelId(
 			return vscodeLlmDefaultModelId
 		case "sambanova":
 			return sambaNovaDefaultModelId
+		case "atomic-ai":
+			return atomicAiDefaultModelId
+		case "poolside":
+			return poolsideDefaultModelId
 		case "fireworks":
 			return fireworksDefaultModelId
 		case "roo":

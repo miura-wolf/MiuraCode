@@ -4,6 +4,7 @@ import { modelInfoSchema, reasoningEffortSettingSchema, verbosityLevelsSchema, s
 import { codebaseIndexProviderSchema } from "./codebase-index.js"
 import {
 	anthropicModels,
+	atomicAiModels,
 	basetenModels,
 	bedrockModels,
 	deepSeekModels,
@@ -13,6 +14,7 @@ import {
 	moonshotModels,
 	openAiCodexModels,
 	openAiNativeModels,
+	poolsideModels,
 	qwenCodeModels,
 	sambaNovaModels,
 	vertexModels,
@@ -125,6 +127,8 @@ export const providerNames = [
 	"qwen-code",
 	"roo",
 	"sambanova",
+	"atomic-ai",
+	"poolside",
 	"vertex",
 	"xai",
 	"zai",
@@ -363,6 +367,15 @@ const sambaNovaSchema = apiModelIdProviderModelSchema.extend({
 	sambaNovaApiKey: z.string().optional(),
 })
 
+const atomicAiSchema = apiModelIdProviderModelSchema.extend({
+	atomicAiBaseUrl: z.string().optional(),
+	atomicAiApiKey: z.string().optional(),
+})
+
+const poolsideSchema = apiModelIdProviderModelSchema.extend({
+	poolsideApiKey: z.string().optional(),
+})
+
 export const zaiApiLineSchema = z.enum(["international_coding", "china_coding", "international_api", "china_api"])
 
 export type ZaiApiLine = z.infer<typeof zaiApiLineSchema>
@@ -423,6 +436,8 @@ export const providerSettingsSchemaDiscriminated = z.discriminatedUnion("apiProv
 	basetenSchema.merge(z.object({ apiProvider: z.literal("baseten") })),
 	litellmSchema.merge(z.object({ apiProvider: z.literal("litellm") })),
 	sambaNovaSchema.merge(z.object({ apiProvider: z.literal("sambanova") })),
+	atomicAiSchema.merge(z.object({ apiProvider: z.literal("atomic-ai") })),
+	poolsideSchema.merge(z.object({ apiProvider: z.literal("poolside") })),
 	zaiSchema.merge(z.object({ apiProvider: z.literal("zai") })),
 	fireworksSchema.merge(z.object({ apiProvider: z.literal("fireworks") })),
 	qwenCodeSchema.merge(z.object({ apiProvider: z.literal("qwen-code") })),
@@ -457,6 +472,8 @@ export const providerSettingsSchema = z.object({
 	...basetenSchema.shape,
 	...litellmSchema.shape,
 	...sambaNovaSchema.shape,
+	...atomicAiSchema.shape,
+	...poolsideSchema.shape,
 	...zaiSchema.shape,
 	...fireworksSchema.shape,
 	...qwenCodeSchema.shape,
@@ -533,6 +550,8 @@ export const modelIdKeysByProvider: Record<TypicalProvider, ModelIdKey> = {
 	baseten: "apiModelId",
 	litellm: "litellmModelId",
 	sambanova: "apiModelId",
+	"atomic-ai": "apiModelId",
+	poolside: "apiModelId",
 	zai: "apiModelId",
 	fireworks: "apiModelId",
 	roo: "apiModelId",
@@ -632,6 +651,16 @@ export const MODELS_BY_PROVIDER: Record<
 		id: "sambanova",
 		label: "SambaNova",
 		models: Object.keys(sambaNovaModels),
+	},
+	"atomic-ai": {
+		id: "atomic-ai",
+		label: "Atomic AI (local)",
+		models: Object.keys(atomicAiModels),
+	},
+	poolside: {
+		id: "poolside",
+		label: "Poolside",
+		models: Object.keys(poolsideModels),
 	},
 	vertex: {
 		id: "vertex",

@@ -177,6 +177,8 @@ describe("ProfileValidator", () => {
 			"deepseek",
 			"xai",
 			"sambanova",
+			"atomic-ai",
+			"poolside",
 			"fireworks",
 		]
 

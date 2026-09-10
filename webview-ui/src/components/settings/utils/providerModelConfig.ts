@@ -1,6 +1,7 @@
 import type { ProviderName, ModelInfo, ProviderSettings } from "@roo-code/types"
 import {
 	anthropicDefaultModelId,
+	atomicAiDefaultModelId,
 	bedrockDefaultModelId,
 	deepSeekDefaultModelId,
 	moonshotDefaultModelId,
@@ -8,6 +9,7 @@ import {
 	mistralDefaultModelId,
 	openAiNativeDefaultModelId,
 	qwenCodeDefaultModelId,
+	poolsideDefaultModelId,
 	vertexDefaultModelId,
 	xaiDefaultModelId,
 	sambaNovaDefaultModelId,
@@ -27,6 +29,7 @@ export interface ProviderServiceConfig {
 
 export const PROVIDER_SERVICE_CONFIG: Partial<Record<ProviderName, ProviderServiceConfig>> = {
 	anthropic: { serviceName: "Anthropic", serviceUrl: "https://console.anthropic.com" },
+	"atomic-ai": { serviceName: "Atomic AI", serviceUrl: "http://127.0.0.1:8120" },
 	bedrock: { serviceName: "Amazon Bedrock", serviceUrl: "https://aws.amazon.com/bedrock" },
 	deepseek: { serviceName: "DeepSeek", serviceUrl: "https://platform.deepseek.com" },
 	moonshot: { serviceName: "Moonshot", serviceUrl: "https://platform.moonshot.cn" },
@@ -39,6 +42,7 @@ export const PROVIDER_SERVICE_CONFIG: Partial<Record<ProviderName, ProviderServi
 	sambanova: { serviceName: "SambaNova", serviceUrl: "https://sambanova.ai" },
 	zai: { serviceName: "Z.ai", serviceUrl: "https://z.ai" },
 	fireworks: { serviceName: "Fireworks AI", serviceUrl: "https://fireworks.ai" },
+	poolside: { serviceName: "Poolside", serviceUrl: "https://poolside.in" },
 	minimax: { serviceName: "MiniMax", serviceUrl: "https://minimax.chat" },
 	baseten: { serviceName: "Baseten", serviceUrl: "https://baseten.co" },
 	ollama: { serviceName: "Ollama", serviceUrl: "https://ollama.ai" },
@@ -51,6 +55,7 @@ export const PROVIDER_SERVICE_CONFIG: Partial<Record<ProviderName, ProviderServi
 
 export const PROVIDER_DEFAULT_MODEL_IDS: Partial<Record<ProviderName, string>> = {
 	anthropic: anthropicDefaultModelId,
+	"atomic-ai": atomicAiDefaultModelId,
 	bedrock: bedrockDefaultModelId,
 	deepseek: deepSeekDefaultModelId,
 	moonshot: moonshotDefaultModelId,
@@ -58,6 +63,7 @@ export const PROVIDER_DEFAULT_MODEL_IDS: Partial<Record<ProviderName, string>> =
 	mistral: mistralDefaultModelId,
 	"openai-native": openAiNativeDefaultModelId,
 	"qwen-code": qwenCodeDefaultModelId,
+	poolside: poolsideDefaultModelId,
 	vertex: vertexDefaultModelId,
 	xai: xaiDefaultModelId,
 	sambanova: sambaNovaDefaultModelId,

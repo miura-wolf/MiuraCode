@@ -28,6 +28,8 @@ import {
 	LiteLLMHandler,
 	QwenCodeHandler,
 	SambaNovaHandler,
+	AtomicAIHandler,
+	PoolsideHandler,
 	ZAiHandler,
 	FireworksHandler,
 	RooHandler,
@@ -163,6 +165,10 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new LiteLLMHandler(options)
 		case "sambanova":
 			return new SambaNovaHandler(options)
+		case "atomic-ai":
+			return new AtomicAIHandler(options)
+		case "poolside":
+			return new PoolsideHandler(options)
 		case "zai":
 			return new ZAiHandler(options)
 		case "fireworks":

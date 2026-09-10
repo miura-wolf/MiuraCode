@@ -280,6 +280,8 @@ export const SECRET_STATE_KEYS = [
 	"fireworksApiKey",
 	"vercelAiGatewayApiKey",
 	"basetenApiKey",
+	"atomicAiApiKey",
+	"poolsideApiKey",
 ] as const
 
 // Global secrets that are part of GlobalSettings (not ProviderSettings)

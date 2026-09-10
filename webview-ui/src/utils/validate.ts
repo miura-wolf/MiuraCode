@@ -128,6 +128,15 @@ function validateModelsAndKeysProvided(apiConfiguration: ProviderSettings): stri
 				return i18next.t("settings:validation.apiKey")
 			}
 			break
+		case "atomic-ai":
+			// Local orchestrator proxy; no API key required (base URL defaults
+			// to http://127.0.0.1:8120/v1). Nothing to validate client-side.
+			break
+		case "poolside":
+			if (!apiConfiguration.poolsideApiKey) {
+				return i18next.t("settings:validation.apiKey")
+			}
+			break
 	}
 
 	return undefined

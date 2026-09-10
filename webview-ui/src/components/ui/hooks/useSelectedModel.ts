@@ -5,6 +5,7 @@ import {
 	type ModelRecord,
 	type RouterModels,
 	anthropicModels,
+	atomicAiModels,
 	bedrockModels,
 	deepSeekModels,
 	moonshotModels,
@@ -18,6 +19,7 @@ import {
 	vscodeLlmModels,
 	vscodeLlmDefaultModelId,
 	openAiCodexModels,
+	poolsideModels,
 	sambaNovaModels,
 	internationalZAiModels,
 	mainlandZAiModels,
@@ -305,6 +307,16 @@ function getSelectedModel({
 		case "sambanova": {
 			const id = apiConfiguration.apiModelId ?? defaultModelId
 			const info = sambaNovaModels[id as keyof typeof sambaNovaModels]
+			return { id, info }
+		}
+		case "atomic-ai": {
+			const id = apiConfiguration.apiModelId ?? defaultModelId
+			const info = atomicAiModels[id as keyof typeof atomicAiModels]
+			return { id, info }
+		}
+		case "poolside": {
+			const id = apiConfiguration.apiModelId ?? defaultModelId
+			const info = poolsideModels[id as keyof typeof poolsideModels]
 			return { id, info }
 		}
 		case "fireworks": {

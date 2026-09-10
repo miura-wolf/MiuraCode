@@ -24,6 +24,8 @@ import {
 	xaiDefaultModelId,
 	basetenDefaultModelId,
 	bedrockDefaultModelId,
+	atomicAiDefaultModelId,
+	poolsideDefaultModelId,
 	vertexDefaultModelId,
 	sambaNovaDefaultModelId,
 	internationalZAiDefaultModelId,
@@ -68,6 +70,7 @@ import {
 
 import {
 	Anthropic,
+	AtomicAI,
 	Baseten,
 	Bedrock,
 	DeepSeek,
@@ -82,6 +85,7 @@ import {
 	OpenAICodex,
 	OpenRouter,
 	Poe,
+	Poolside,
 	QwenCode,
 	Requesty,
 	Roo,
@@ -352,6 +356,8 @@ const ApiOptions = ({
 				bedrock: { field: "apiModelId", default: bedrockDefaultModelId },
 				vertex: { field: "apiModelId", default: vertexDefaultModelId },
 				sambanova: { field: "apiModelId", default: sambaNovaDefaultModelId },
+				"atomic-ai": { field: "apiModelId", default: atomicAiDefaultModelId },
+				poolside: { field: "apiModelId", default: poolsideDefaultModelId },
 				zai: {
 					field: "apiModelId",
 					default:
@@ -577,6 +583,20 @@ const ApiOptions = ({
 							apiConfiguration={apiConfiguration}
 							setApiConfigurationField={setApiConfigurationField}
 							simplifySettings={fromWelcomeView}
+						/>
+					)}
+
+					{selectedProvider === "atomic-ai" && (
+						<AtomicAI
+							apiConfiguration={apiConfiguration}
+							setApiConfigurationField={setApiConfigurationField}
+						/>
+					)}
+
+					{selectedProvider === "poolside" && (
+						<Poolside
+							apiConfiguration={apiConfiguration}
+							setApiConfigurationField={setApiConfigurationField}
 						/>
 					)}
 
