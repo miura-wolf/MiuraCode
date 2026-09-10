@@ -40,6 +40,8 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Metadatos/grafo en la KB (F5)** | ✅ implementado (`db.py`): `source`, `updated_at`, `vector_updated_at`, `parent_id`, `version` + migración automática |
 | **Observabilidad / métricas (F6)** | ✅ implementado (`app/metrics.py` + `GET /v1/stats`): contadores y latencias por fase en memoria, sin dependencias externas |
 | **Investigación web de respaldo (F7)** | ✅ implementado y **validado end-to-end** (`app/web_research.py`): en un miss del RAG local llama a Gigaxity Deep Research (NIM + SearXNG) e inyecta una síntesis con citas |
+| **Carriles de búsqueda de gigaxity (F7.1)** | ✅ Exa + SerpAPI añadidos (keyed, free-tier) y **ddgs keyless** (deedy5/ddgs, opt-in `RESEARCH_DDGS_ENABLED`) — Tavily/LinkUp activos, SearXNG reservado |
+| **Rate limit NIM (F7.2)** | ✅ limiter RPM ventana deslizante cliente (`RESEARCH_LLM_RPM`, default 0=off; 40 recomendado) en `llm_client.py` — todas las llamadas LLM del proceso comparten un solo presupuesto |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
 | Tests | ✅ **130/130** pasando |
 
