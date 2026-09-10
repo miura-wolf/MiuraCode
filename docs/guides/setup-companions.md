@@ -1,0 +1,259 @@
+# Installing the bundled companions
+
+Four companion services ship in [`companions/`](../../companions/) and pair with the parent server. This guide walks through installing each — order matters because some depend on others.
+
+## What you're installing
+
+| Companion | What | Required? |
+|---|---|---|
+| `companions/searxng/` | Local SearXNG instance via Docker | **Required** unless you point at an external SearXNG |
+| `companions/exa-answer/` | Tiny MCP wrapping Exa's `/answer` endpoint | Recommended — `QUICK FACTUAL` queries route here |
+| `companions/jina-mcp/` | Self-hosted Jina MCP — 19 tools: web search, URL reading, arXiv/SSRN/BibTeX, rerank, dedup, classify, PDF layout | **Recommended** — replaces Jina's hosted server, whose search lane refuses free-tier credits |
+| `companions/brightdata-fallback/` | Tiny MCP wrapping Brightdata Web Unlocker | Optional — needed only if you hit blocked URLs often |
+| `companions/gptr-mcp/` | Install glue for [`gptr-mcp`](https://github.com/assafelovic/gptr-mcp) — clones the upstream MCP shim around [GPT Researcher](https://github.com/assafelovic/gpt-researcher) and ships an env template tuned for social-first research (Reddit, X, YouTube) | Recommended — community-knowledge queries route here |
+
+## Order
+
+```
+1. SearXNG               (sets up the search backend)
+2. Parent server         (already covered in setup-mcp.md)
+3. exa-answer            (Python venv + register MCP)
+4. jina-mcp              (Python venv + register MCP)
+5. brightdata-fallback   (Python venv + register MCP) — optional
+6. gptr-mcp              (./install.sh clones upstream + register MCP)
+```
+
+## 1. SearXNG
+
+Spin up a local SearXNG instance with the JSON API enabled.
+
+```bash
+cd companions/searxng
+cp settings.yml.example settings.yml
+
+# (optional) edit settings.yml — change `secret_key` if exposing beyond localhost
+# generate one with: openssl rand -hex 32
+
+docker compose up -d
+```
+
+Verify:
+
+```bash
+curl http://localhost:8888/healthz
+# OK
+
+curl 'http://localhost:8888/search?q=test&format=json' | head
+# JSON response (not HTML)
+```
+
+If JSON test returns HTML, the `formats: [html, json]` line in `settings.yml` is missing — fix it and `docker compose restart`.
+
+In the parent project's `.env`:
+
+```bash
+RESEARCH_SEARXNG_HOST=http://localhost:8888
+```
+
+For production hardening (real `secret_key`, rate limiting, reverse proxy), see [`companions/searxng/README.md`](../../companions/searxng/README.md).
+
+## 2. Parent server
+
+Already covered in [setup-mcp.md](setup-mcp.md). Skip if already done.
+
+## 3. exa-answer
+
+Install the minimal Exa `/answer` wrapper:
+
+```bash
+cd companions/exa-answer
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Register with Claude Code in `~/.claude.json`:
+
+```json
+"exa-answer": {
+  "type": "stdio",
+  "command": "/absolute/path/to/gigaxity-deep-research/companions/exa-answer/.venv/bin/python",
+  "args": ["/absolute/path/to/gigaxity-deep-research/companions/exa-answer/mcp_server.py"],
+  "env": {
+    "EXA_API_KEY": "your-exa-api-key-placeholder"
+  }
+}
+```
+
+Sign up at https://exa.ai if you don't have a key. The same key works for the main `exa` MCP — register both under one key.
+
+After Claude Code restart, `mcp__exa-answer__exa_answer` is callable.
+
+Smoke test from the venv:
+
+```bash
+EXA_API_KEY=your-exa-api-key-placeholder python mcp_server.py < /dev/null
+# Should boot and wait for stdin. Ctrl+C to exit.
+```
+
+If it fails immediately with "EXA_API_KEY must be set" — env not picked up; double-check the `env` block.
+
+## 4. jina-mcp
+
+Install the self-hosted Jina MCP:
+
+```bash
+cd companions/jina-mcp
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Register with Claude Code in `~/.claude.json`:
+
+```json
+"jina": {
+  "type": "stdio",
+  "command": "/absolute/path/to/gigaxity-deep-research/companions/jina-mcp/.venv/bin/python",
+  "args": ["/absolute/path/to/gigaxity-deep-research/companions/jina-mcp/mcp_server.py"],
+  "env": {
+    "JINA_API_KEY": "your-jina-api-key-placeholder"
+  }
+}
+```
+
+Sign up at https://jina.ai for a free 10M-token key.
+
+**Already have a hosted `jina` entry?** Replace it. Delete the old `"type": "http"` block pointing at `https://mcp.jina.ai/v1` and paste the above under the same `jina` alias. Keeping the alias means tool paths stay `mcp__jina__*` and nothing downstream needs editing.
+
+**Why self-hosted.** Jina's hosted server routes its entire search family through `svip.jina.ai`, a paid lane that refuses trial credits — including the free 10M tier — and returns a bare `Internal Server Error` because the worker discards the response body. On a free key that takes out `search_web`, `search_arxiv`, `search_ssrn` and their parallel variants while reading and reranking keep working ([jina-ai/MCP#32](https://github.com/jina-ai/MCP/issues/32)). Rotating the key does not help. This server routes web search to `s.jina.ai` and takes arXiv, SSRN and BibTeX to their own free key-less APIs. Full detail in [`companions/jina-mcp/README.md`](../../companions/jina-mcp/README.md).
+
+After Claude Code restart, `mcp__jina__search_web` and 18 sibling tools are callable.
+
+Smoke test from the venv:
+
+```bash
+JINA_API_KEY=your-jina-api-key-placeholder python mcp_server.py < /dev/null
+# Should boot and wait for stdin. Ctrl+C to exit.
+```
+
+Then call `primer` from your agent — it prints the active search lane and every backend in use. `show_api_key` prints your wallet balances, which is what tells genuine key exhaustion apart from an unfunded lane.
+
+## 5. brightdata-fallback (optional)
+
+Install the minimal Brightdata Web Unlocker wrapper:
+
+```bash
+cd companions/brightdata-fallback
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Get a Brightdata account + Web Unlocker zone:
+- https://brightdata.com → sign up
+- Create a Web Unlocker zone in the dashboard (note the zone name, e.g. `web_unlocker1`)
+- Generate an API token under Account Settings
+
+Register with Claude Code in `~/.claude.json`:
+
+```json
+"brightdata_fallback": {
+  "type": "stdio",
+  "command": "/absolute/path/to/gigaxity-deep-research/companions/brightdata-fallback/.venv/bin/python",
+  "args": ["/absolute/path/to/gigaxity-deep-research/companions/brightdata-fallback/mcp_server.py"],
+  "cwd": "/absolute/path/to/gigaxity-deep-research/companions/brightdata-fallback",
+  "env": {
+    "BRIGHTDATA_API_TOKEN": "your-brightdata-api-token-placeholder",
+    "BRIGHTDATA_ZONE": "your-web-unlocker-zone-name-placeholder"
+  }
+}
+```
+
+After Claude Code restart, `mcp__brightdata_fallback__scrape_as_markdown` is callable.
+
+If you skip Brightdata, the routing skill degrades gracefully — URLs that would have routed here just propagate their original error. SYNTHESIS workflows tolerate this because they pull from many sources; single-URL queries on blocked sites will simply fail.
+
+## 6. gptr-mcp
+
+`gptr-mcp` (the seventh MCP in the deep research stack) is a thin shim around [GPT Researcher](https://github.com/assafelovic/gpt-researcher) — the agentic-research library — tuned for social-first sources (Reddit, X/Twitter, YouTube). The bundled install script clones the upstream MCP into a sibling directory rather than vendoring source.
+
+```bash
+cd companions/gptr-mcp
+./install.sh
+```
+
+What `install.sh` does:
+- Clones `https://github.com/assafelovic/gptr-mcp.git` into `../../../gptr-mcp-source` (sibling of the parent repo)
+- Creates a venv next to the source
+- Installs `requirements.txt` (which pulls in `gpt-researcher` as a transitive dep)
+
+Pin a specific upstream commit/tag with `GPTR_MCP_REF=<ref> ./install.sh`. Default is `main`.
+
+Get API keys:
+- OpenAI key — required for the underlying LLM, and for the `social_openai` retriever if you enable it (https://platform.openai.com/api-keys)
+- Tavily key — required for the default web retriever (https://tavily.com)
+
+Configure:
+
+```bash
+cd ../../../gptr-mcp-source
+cp ../gigaxity-deep-research/companions/gptr-mcp/env.example .env
+# edit .env to set OPENAI_API_KEY and TAVILY_API_KEY
+```
+
+Register with Claude Code in `~/.claude.json`:
+
+```json
+"gptr-mcp": {
+  "type": "stdio",
+  "command": "/absolute/path/to/gptr-mcp-source/.venv/bin/python",
+  "args": ["/absolute/path/to/gptr-mcp-source/server.py"],
+  "cwd": "/absolute/path/to/gptr-mcp-source",
+  "env": {
+    "OPENAI_API_KEY": "your-openai-api-key-placeholder",
+    "TAVILY_API_KEY": "your-tavily-api-key-placeholder",
+    "RETRIEVER": "tavily",
+    "FAST_LLM": "openai:gpt-4o-mini",
+    "SMART_LLM": "openai:gpt-4o",
+    "STRATEGIC_LLM": "openai:gpt-4o-mini"
+  }
+}
+```
+
+After Claude Code restart, four tools become callable: `mcp__gptr-mcp__quick_search`, `mcp__gptr-mcp__deep_research`, `mcp__gptr-mcp__get_research_context`, `mcp__gptr-mcp__get_research_sources`.
+
+### Enable the social-first retrievers (opt-in)
+
+The config above runs the stock `tavily` retriever. The `social_openai` (Reddit + YouTube) and `twitterapi` (native X/Twitter) retrievers are a first-party add-on shipped in this repo — they are **not** part of a vanilla GPT Researcher install. Enable them once per **[`companions/gptr-mcp/CUSTOM_RETRIEVERS.md`](../../companions/gptr-mcp/CUSTOM_RETRIEVERS.md)** (clone the library at `v3.5.0`, drop in the two packages, apply a 3-file registry patch, install editable into the venv). Then set in the `env` block: `RETRIEVER=social_openai,twitterapi,tavily`, `SOCIAL_OPENAI_DOMAINS=reddit.com,youtube.com`, `SOCIAL_OPENAI_MODEL=gpt-4o`, plus `TWITTERAPI_IO_KEY` (paid — omit `twitterapi` from `RETRIEVER` if you don't have one).
+
+⚠️ Pointing `RETRIEVER` at `social_openai`/`twitterapi` **before** enabling them makes GPT Researcher silently fall back to Tavily — no error, no social results. Run the verify step in CUSTOM_RETRIEVERS.md. LinkedIn isn't covered by `social_openai`; for LinkedIn-specific queries use `mcp__exa__web_search_advanced_exa` with `includeDomains=["linkedin.com"]`.
+
+If you skip gptr-mcp, the routing skill falls back to `mcp__exa__web_search_advanced_exa` with `includeDomains=["reddit.com"]` etc. — workable but with less social-aware ranking. Exa is preferred over Jina's `site` argument here because it is a real multi-domain filter; Jina's works again after the 2026-08-01 upstream incident ([reader#1258](https://github.com/jina-ai/reader/issues/1258)) but takes one domain only.
+
+## Verify the full stack
+
+In Claude Code, type `/mcp` — confirm all seven MCPs show green:
+
+```
+context7                        ●  (stdio, npx)
+exa                             ●  (HTTP)
+exa-answer                      ●  (stdio, companions/exa-answer)
+jina                            ●  (stdio, companions/jina-mcp)
+gigaxity-deep-research          ●  (stdio, parent)
+brightdata_fallback             ●  (stdio, companions/brightdata-fallback) — optional
+gptr-mcp                        ●  (stdio, ../gptr-mcp-source)
+```
+
+The middle three (`context7` + `exa` + `jina`) are the **Triple Stack** — the search/docs/code trio. The other four (`exa-answer`, `gigaxity-deep-research`, `brightdata_fallback`, `gptr-mcp`) layer on top: speed-critical lookups, synthesis, blocked-URL recovery, and social-first research.
+
+If any are red, follow the "Failure modes" table in [triple-stack-setup.md](triple-stack-setup.md).
+
+## Why bundled vs separate repos?
+
+Bundling these four saves users from the most-common setup pitfalls: SearXNG without JSON enabled, missing-wrapper for `/answer`, a hosted Jina server whose search lane refuses free-tier credits, and locating a Brightdata wrapper template. Each companion is self-contained — `requirements.txt` + a single Python file (or compose file for SearXNG) — so they don't add meaningful weight to the parent repo.
+
+If you want any companion in its own repo, the directories are portable. Copy the directory out, push to its own remote, adjust the parent's docs to point at the new URL. No edits to companion source needed.

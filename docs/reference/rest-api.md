@@ -1,0 +1,331 @@
+# REST API reference
+
+Gigaxity Deep Research exposes the same orchestration over HTTP via FastAPI. The REST surface mirrors the six MCP tools (`search`, `research`, `ask`, `discover`, `synthesize`, `reason`) and adds enhanced synthesis variants (`/synthesize/enhanced`, `/synthesize/p1`) plus reflection endpoints for presets and focus modes.
+
+Base URL: `http://<RESEARCH_HOST>:<RESEARCH_PORT>` (defaults to `http://127.0.0.1:8000`). Bind to `0.0.0.0` only behind an authenticated reverse proxy — the REST surface spends the env-configured OpenRouter key on every unauthenticated caller that reaches it.
+
+All POST endpoints accept the optional header `X-OpenRouter-Api-Key: <key>` for per-request key override (multi-tenant). Bodies that include an `api_key` field set the same override. Header and body values both win over the env-configured `RESEARCH_LLM_API_KEY`.
+
+The interactive OpenAPI schema lives at `/docs` and is the source of truth — this page summarizes it.
+
+---
+
+## GET /api/v1/health
+
+Health + connector status.
+
+**Response (`HealthResponse`):**
+
+```json
+{
+  "status": "healthy",
+  "connectors": ["searxng", "tavily"],
+  "llm_configured": true
+}
+```
+
+`connectors` is a list of active connector names. `llm_configured` is true when `RESEARCH_LLM_API_KEY` is set; the env-configured base URL alone is not sufficient.
+
+---
+
+## POST /api/v1/search
+
+Multi-source search only — no LLM call.
+
+**Request (`SearchRequest`):**
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `query` | str | required | Search query |
+| `top_k` | int | `10` | Per-connector result count |
+| `connectors` | list[str] \| null | null | Restrict to specific connectors (default: all configured) |
+
+**Response (`SearchResponse`):**
+
+```json
+{
+  "query": "...",
+  "sources": [
+    {
+      "id": "...",
+      "title": "...",
+      "url": "...",
+      "content": "...",
+      "score": 0.92,
+      "connector": "searxng",
+      "metadata": {}
+    }
+  ],
+  "connectors_used": ["searxng", "tavily"],
+  "total_results": 17
+}
+```
+
+---
+
+## POST /api/v1/research
+
+Combined search + synthesis. The server fetches sources internally — caller does not pre-fetch.
+
+**Request (`ResearchRequest`):**
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `query` | str | required | Research query |
+| `top_k` | int | `10` | Per-connector result count (1–50) |
+| `connectors` | list[str] \| null | null | Optional connector restriction |
+| `reasoning_effort` | str | `"medium"` | `"low"` / `"medium"` / `"high"` |
+| `preset` | str \| null | null | Optional P1 preset: `comprehensive`, `fast`, `contracrow`, `academic`, `tutorial` |
+| `focus_mode` | str \| null | null | Optional focus mode (same enum as `discover`) |
+| `api_key` | str \| null | null | Per-request key override |
+
+**Response (`ResearchResponse`):**
+
+```json
+{
+  "query": "...",
+  "content": "...synthesis with [1], [2] citations...",
+  "citations": [
+    {"id": "1", "number": 1, "source_id": "tv_a1b2c3d4", "title": "...", "url": "..."}
+  ],
+  "sources": [{"id": "...", "title": "...", "url": "...", "content": "...", "score": 0.9, "connector": "searxng"}],
+  "connectors_used": ["searxng", "tavily"],
+  "model": "qwen/qwen3-30b-a3b-thinking-2507",
+  "usage": {"prompt_tokens": 1234, "completion_tokens": 567},
+  "preset_used": "fast",
+  "focus_mode_used": null,
+  "quality_gate": null,
+  "contradictions": [],
+  "rcs_summaries": null
+}
+```
+
+The `preset_used`, `focus_mode_used`, `quality_gate`, `contradictions`, and `rcs_summaries` fields populate only when the corresponding P1 features are enabled.
+
+**Citation shape (v0.3.0).** Every citation dict carries `id` (string-typed compatibility alias, always `str(number)`), `number` (1-based int matching the `[N]` marker in `content`), and `source_id` (connector trace like `"tv_a1b2c3d4"` when the source has one; `null` for pre-gathered aggregator sources). Callers that previously pattern-matched `citation.id.startswith("tv_")` to identify Tavily-origin citations should read `citation.source_id` instead — `id` is now always a numeric string.
+
+---
+
+## POST /api/v1/ask
+
+Quick conversational answer. **Direct LLM call, no search hop.** Mirrors the stdio `ask` shape.
+
+**Request (`AskRequest`):**
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `query` | str | required | The question |
+| `context` | str | `""` | Optional system-context string fed to the LLM |
+| `api_key` | str \| null | null | Per-request key override |
+
+**Response (`AskResponse`):**
+
+```json
+{
+  "query": "...",
+  "content": "...the LLM's answer...",
+  "citations": [],
+  "sources": [],
+  "model": "qwen/qwen3-30b-a3b-thinking-2507"
+}
+```
+
+`citations` and `sources` are always empty because `ask` does not search.
+
+---
+
+## POST /api/v1/discover
+
+Exploratory expansion + knowledge-gap detection.
+
+**Request (`DiscoverRequest`):**
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `query` | str | required | Topic to explore |
+| `top_k` | int | `10` | Per-connector result count |
+| `identify_gaps` | bool | `true` | Run gap-detection LLM call |
+| `focus_mode` | str | `"general"` | `general`, `academic`, `documentation`, `comparison`, `debugging`, `tutorial`, `news` |
+| `connectors` | list[str] \| null | null | Optional connector restriction |
+| `api_key` | str \| null | null | Per-request key override |
+
+**Response (`DiscoverResponse`):**
+
+```json
+{
+  "query": "...",
+  "landscape": {
+    "explicit_topics": ["..."],
+    "implicit_topics": ["..."],
+    "related_concepts": ["..."],
+    "contrasting_perspectives": ["..."]
+  },
+  "knowledge_gaps": [
+    {"gap": "...", "importance": "high", "category": "...", "description": "..."}
+  ],
+  "sources": [
+    {
+      "source": {"id": "...", "title": "...", "url": "...", "content": "...", "score": 0.9, "connector": "searxng"},
+      "gap_coverage": ["gap_a", "gap_b"]
+    }
+  ],
+  "synthesis_preview": "...",
+  "recommended_deep_dives": ["https://..."],
+  "connectors_used": ["searxng", "tavily"],
+  "degradations": []
+}
+```
+
+Each entry in `sources` also carries `scoring_status` (v0.11.1): `"llm_scored"` for a validated
+model scoring record, `"retrieval_fallback"` for a source ranked by raw retrieval score (beyond the
+15-source scoring limit, or the scoring parse was rejected).
+
+`degradations` (v0.11.1) lists structured stages that substituted a deterministic fallback because
+the model output was reasoning-starved, truncated, or malformed — empty on a clean run. Shape:
+`{"stage": "landscape", "code": "truncated", "parse_failed": true, "fallback_used": true,
+"message": "...", "truncated": true, "reasoning_only": false, "finish_reason": "length"}`.
+A degraded discovery result is not cached, so the next identical request re-attempts the degraded
+stage instead of serving the fallback from cache.
+
+---
+
+## POST /api/v1/synthesize
+
+Citation-aware synthesis over caller-provided sources. Does not search.
+
+**Request (`SynthesizeRequest`):**
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `query` | str | required | Original research query |
+| `sources` | list[PreGatheredSource] | required | Pre-fetched sources from Context7/Exa/Jina or your own reader |
+| `style` | str | `"comprehensive"` | `comprehensive`, `concise`, `comparative`, `tutorial`, `academic` |
+| `max_tokens` | int | `3000` | Output cap (500–16384) |
+| `api_key` | str \| null | null | Per-request key override |
+
+`PreGatheredSource` shape: `{"origin": "ref|exa|jina|...", "url": "...", "title": "...", "content": "...", "source_type": "article", "metadata": {}}`.
+
+**Response (`SynthesizeResponse`):**
+
+```json
+{
+  "query": "...",
+  "content": "...synthesis with [1], [2]...",
+  "citations": [{"id": "1", "title": "...", "url": "..."}],
+  "source_attribution": [{"origin": "ref", "contribution": 0.42}],
+  "confidence": 0.83,
+  "style_used": "comprehensive",
+  "word_count": 612,
+  "model": "qwen/qwen3-30b-a3b-thinking-2507",
+  "usage": {"prompt_tokens": 1500, "completion_tokens": 612}
+}
+```
+
+**Output verification.** The `content` field is post-verified before return. Hard-failure conditions — empty completion, a reasoning trace returned in place of an answer, generation truncated by `max_tokens` even after a one-shot retry at the ceiling, a contributing sub-call producing no usable answer, or zero citations when sources are present — prepend a `# Synthesis verification FAILED` header listing the specific failure(s), with the unverified output following below for debugging. Soft conditions (partial citation coverage, contradiction-detector advisories, surfaced contradictions, and — since v0.5.0 — a discussed query entity absent from every retained source, flagged `treat as UNVERIFIED` / `surface-form variant` / `emphasis/framing`) append a `*Verification notes: ...*` advisory at the end. Since v0.12.0 the contradiction detector distinguishes an unparseable response, one that never attempted the structured format, and one carrying both findings and a "no contradictions" declaration — all three mean the `contradictions` array is non-exhaustive; see [`mcp-tools.md`](mcp-tools.md) for the full table. Hard-failed outputs are not cached; a passed result (or cache hit) carrying an entity-coverage caveat means `passed` no longer implies clean grounding — inspect the advisory.
+
+**Synthesis output discipline (v0.3.7).** The free-form synthesis prompts wrap the answer in `<answer>…</answer>` and the server returns the unwrapped content, dropping any trailing self-commentary the model appended after the closing tag. Transparent to callers — the `content` field never contains the tags, and the fallback is non-destructive when they are absent.
+
+**`max_tokens` budgeting.** `max_tokens` is treated as a base output budget — the server derives the effective budget per call internally, adding reasoning-model headroom and capping at `RESEARCH_LLM_MAX_TOKENS`. The accepted request range is unchanged (500–16384). The synthesis cache fingerprint is order-sensitive: reordering the `sources` list produces a different cache key.
+
+---
+
+## POST /api/v1/synthesize/enhanced
+
+Adds the P0 reliability stack on top of `/synthesize`: source quality gate (CRAG), contradiction detection (PaperQA2), and citation verification.
+
+**Request (`SynthesizeRequestEnhanced`):** extends `SynthesizeRequest` with `run_quality_gate: bool`, `detect_contradictions: bool`, `verify_citations: bool`.
+
+**Response (`SynthesizeResponseEnhanced`):** extends `SynthesizeResponse` with `quality_gate`, `contradictions`, and `verified_claims` blocks.
+
+---
+
+## POST /api/v1/synthesize/p1
+
+Adds the P1 stack: presets (which switch on quality-gate / RCS / contradictions / outline-guided synthesis as a bundle), Recursive Context Summarization, and outline-guided generation.
+
+**Request (`SynthesizeRequestP1`):** extends `SynthesizeRequest` with `preset: Literal["comprehensive","fast","contracrow","academic","tutorial"]` plus per-feature toggles.
+
+**Response (`SynthesizeResponseP1`):** extends `SynthesizeResponse` with `preset_used`, `quality_gate`, `contradictions`, `rcs_summaries`, `outline`, and `critique` blocks (populated by whatever the preset enables).
+
+---
+
+## POST /api/v1/reason
+
+Deep reasoning over pre-gathered sources with a fixed chain-of-thought prompt. There is no `style` parameter — `reason` is intentionally about reasoning shape, not prose register. Use `/api/v1/synthesize` if you want style variants.
+
+**Request (`ReasonRequest`):**
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `query` | str | required | Question |
+| `sources` | list[PreGatheredSource] | required | Pre-fetched sources |
+| `api_key` | str \| null | null | Per-request key override |
+
+**Response (`ReasonResponse`):**
+
+```json
+{
+  "query": "...",
+  "content": "...the synthesized answer (the chain-of-thought is consumed by the prompt and not echoed back; if the model fails to emit the expected `<synthesis>` block, the full raw response is returned in `content`)...",
+  "reasoning": null,
+  "citations": [{"id": "1", "title": "...", "url": "..."}],
+  "source_attribution": [{"origin": "ref", "contribution": 0.5}],
+  "confidence": 0.81,
+  "word_count": 920,
+  "model": "qwen/qwen3-30b-a3b-thinking-2507"
+}
+```
+
+`reasoning` is reserved for prompt configurations that emit a separable CoT trace and is `null` on the default reasoning path. The default path consumes the chain-of-thought inside the prompt and returns only the synthesized answer in `content` — the trace is *not* echoed back. If the model fails to emit the expected `<synthesis>` block, the full raw response is returned in `content` as a fallback.
+
+When `sources` is non-empty, `/api/v1/reason` runs the same post-synthesis verifier as `/api/v1/synthesize` (see above): a degraded output is prepended with a `# Synthesis verification FAILED` header listing what went wrong.
+
+---
+
+## GET /api/v1/presets
+
+Lists synthesis presets and their per-stage configuration.
+
+**Response (`PresetListResponse`):** `{"presets": [{"name": "comprehensive", "description": "...", "max_tokens": 4000, "run_quality_gate": true, "detect_contradictions": true, "use_rcs": false, "use_outline": false, "verify_citations": true}, ...]}`.
+
+There are five presets: `comprehensive`, `fast`, `contracrow`, `academic`, `tutorial`.
+
+## GET /api/v1/focus-modes
+
+Lists focus modes and their gap-detection categories.
+
+**Response (`FocusModeListResponse`):** `{"focus_modes": [{"name": "general", "value": "general", "description": "...", "gap_categories": [...]}, ...]}`.
+
+There are seven focus modes: `general`, `academic`, `documentation`, `comparison`, `debugging`, `tutorial`, `news`.
+
+---
+
+## Error responses
+
+Standard FastAPI / OpenAPI status codes:
+
+| Status | Meaning |
+|---|---|
+| 200 | Success |
+| 400 | Validation error |
+| 401 | OpenRouter auth failed (forwarded from upstream) |
+| 429 | Rate limited (forwarded from upstream) |
+| 500 | Internal error |
+| 503 | No search connectors configured |
+| 504 | LLM timeout — a per-operation timeout (`RESEARCH_LLM_TIMEOUT`) or, when enabled, the whole-call ceiling `RESEARCH_LLM_WALL_CLOCK_CAP` |
+
+Error body shape (FastAPI default):
+
+```json
+{"detail": "human-readable explanation or validation error array"}
+```
+
+Stricter typed error envelopes are not yet produced — clients should branch on status codes plus the `detail` content.
+
+---
+
+## Authentication
+
+The server has no built-in authentication. For anything beyond `localhost`, put it behind a reverse proxy (nginx, Caddy) that enforces auth and TLS. See [`setup-rest.md`](../guides/setup-rest.md) for an example.
+
+The per-request `X-OpenRouter-Api-Key` header is forwarded to OpenRouter — it does **not** authenticate the caller to this server. Anyone who can hit `/api/v1/*` will spend whichever OpenRouter key is in scope (header, body, or env).

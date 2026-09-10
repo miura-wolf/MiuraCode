@@ -1,0 +1,320 @@
+"""
+Hot cache for session-length research caching.
+
+Ephemeral /tmp cache - zero persistence, zero cleanup logic.
+Files auto-deleted on reboot. No database, no complexity.
+"""
+
+import hashlib
+import json
+import logging
+import os
+import time
+from dataclasses import dataclass, asdict
+from functools import wraps
+from pathlib import Path
+from typing import Optional, Callable, Any
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CacheEntry:
+    """Cached result with TTL."""
+    result: Any
+    created_at: float
+    ttl: int
+
+
+class HotCache:
+    """
+    Dead-simple /tmp cache for session-length research caching.
+
+    Design principles:
+    - Files auto-deleted on reboot (OS handles cleanup)
+    - No database, no embeddings, just JSON files
+    - Hash-based keys with tier namespacing
+    - ~40 lines of actual logic
+    """
+
+    # TTL defaults by tier (seconds)
+    DEFAULT_TTLS = {
+        "synthesis": 3600,      # 1h - main results
+        "discover": 3600,       # 1h - discovery results
+        "reason": 3600,         # 1h - reasoning results
+        "research": 1800,       # 30m - full pipeline results
+        "search": 1800,         # 30m - raw search results
+        "url": 7200,            # 2h - URL content
+        "ask": 1800,            # 30m - quick answers
+    }
+
+    def __init__(self, namespace: str = "research"):
+        self.cache_dir = Path(f"/tmp/{namespace}_cache")
+        self.cache_dir.mkdir(exist_ok=True)
+        self._hits = 0
+        self._misses = 0
+        # Latched so an unwritable cache warns once, not once per request.
+        self._write_error_logged = False
+
+    def _key(self, query: str, tier: str = "", extra: str = "") -> str:
+        """Normalize query + tier + extra params to cache key."""
+        normalized = f"{tier}:{query.lower().strip()}:{extra}"
+        return hashlib.sha256(normalized.encode()).hexdigest()[:16]
+
+    def _path(self, key: str) -> Path:
+        return self.cache_dir / f"{key}.json"
+
+    def get(self, query: str, tier: str = "", extra: str = "") -> Optional[Any]:
+        """Get cached result if fresh."""
+        path = self._path(self._key(query, tier, extra))
+        if not path.exists():
+            self._misses += 1
+            return None
+
+        try:
+            data = json.loads(path.read_text())
+            age = time.time() - data["created_at"]
+            if age < data["ttl"]:
+                self._hits += 1
+                return data["result"]
+            # Expired - remove
+            path.unlink(missing_ok=True)
+        except (json.JSONDecodeError, KeyError, TypeError):
+            path.unlink(missing_ok=True)
+
+        self._misses += 1
+        return None
+
+    def set(
+        self,
+        query: str,
+        result: Any,
+        tier: str = "",
+        extra: str = "",
+        ttl: Optional[int] = None,
+    ):
+        """Cache result with TTL."""
+        if ttl is None:
+            ttl = self.DEFAULT_TTLS.get(tier, 3600)
+
+        path = self._path(self._key(query, tier, extra))
+        entry = CacheEntry(result=result, created_at=time.time(), ttl=ttl)
+
+        try:
+            path.write_text(json.dumps(asdict(entry)))
+        except TypeError:
+            # Genuinely non-serializable result. Nothing to configure, and the
+            # caller still gets its answer — skipping is correct.
+            pass
+        except OSError as exc:
+            # NOT the same class of problem, which is why it is caught
+            # separately: this is the cache being unusable, and a cache that
+            # silently never writes is indistinguishable from one that works
+            # while costing a full LLM call on every repeat request. Warn once,
+            # with the remedy, rather than failing quietly forever.
+            if not self._write_error_logged:
+                self._write_error_logged = True
+                logger.warning(
+                    "Cache is not writable (%s: %s) — every request will be "
+                    "recomputed and no result will ever be reused. Running in "
+                    "Docker? A named volume mounted at %s is created root-owned "
+                    "by default, while this process runs as uid %d. Fix it once: "
+                    "`docker compose down && docker volume rm "
+                    "<project>_research_cache && docker compose up -d` (the image "
+                    "seeds a correctly-owned directory), or chown the existing "
+                    "volume to uid %d. See docs/troubleshooting.md.",
+                    type(exc).__name__, exc, self.cache_dir, os.getuid(), os.getuid(),
+                )
+
+    def get_url(self, url: str) -> Optional[str]:
+        """URL content cache (L2)."""
+        cached = self.get(url, tier="url")
+        return cached.get("content") if cached else None
+
+    def set_url(self, url: str, content: str, ttl: int = 7200):
+        """Cache URL content."""
+        self.set(url, {"content": content}, tier="url", ttl=ttl)
+
+    def stats(self) -> dict:
+        """Cache statistics."""
+        total = self._hits + self._misses
+        return {
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": self._hits / total if total > 0 else 0,
+            "cache_dir": str(self.cache_dir),
+            "entries": len(list(self.cache_dir.glob("*.json"))),
+        }
+
+    def clear(self):
+        """Clear all cache entries."""
+        for f in self.cache_dir.glob("*.json"):
+            f.unlink(missing_ok=True)
+        self._hits = 0
+        self._misses = 0
+
+
+# Global instance
+cache = HotCache()
+
+
+# Synthesis cache key versioning. Bump this whenever a change to the synthesis
+# pipeline could change output for the same inputs, or whenever the cache-key
+# fingerprint format changes - it invalidates every previously cached synthesis
+# so a stale (e.g. pre-fix) result is never served.
+# v4: quality-gate scorer + RCS summarizer budgets unified onto
+# derive_effective_budget, so reasoning models no longer starve their CoT into
+# the heuristic fallback / empty summaries. The cache key fingerprints only the
+# visible inputs (model, max_tokens, mode, sources), not these internal budgets,
+# so v3 entries can encode the weaker behavior under the same key - bump so they
+# are not served.
+# v5: fail-open content gates - MINOR contradictions filtered from the synthesis
+# prompt (D1), detector source-truncation widened (D2), and the relevance gate
+# fails open over weak sources with a caveat instead of refusing (R2-C1). All
+# three can change synthesis output for the same inputs, so pre-change entries
+# must not be served. (Fail-open low-quality results are themselves non-cacheable
+# per R2-C2; this bump invalidates normal pre-v5 entries.)
+# v6: EVIDENCE DISCIPLINE fragment added across the synthesis prompt surface
+# (RESEARCH_SYSTEM_PROMPT, the aggregator style prompts, and the outline
+# SECTION/REFINE prompts) - source-authority hierarchy + fact/inference/
+# uncertainty separation + single-source flagging (v0.6.3). This changes
+# synthesis prose for the same inputs, so pre-v6 entries must not be served.
+# v7: structured-output hardening (lenient-parsed-callsites rev 7) - the
+# outline stage moved to a reasoning-aware budget + a strict SECTION: grammar
+# with a heuristic fallback, and critique to a whole-response NO_ISSUES /
+# ISSUE: grammar with a synthetic-issue refinement on failure. Outline and
+# critique output change for an unchanged key, so pre-v7 entries must not be
+# served. (Degraded-stage results are additionally non-cacheable via
+# finalize_synthesis cache_eligible; this bump invalidates clean pre-v7
+# entries.)
+SYNTH_CACHE_VERSION = "7"
+
+# Discovery cache key versioning, introduced alongside the v7 synthesis bump.
+# The pre-versioned discovery key carried only focus_mode + identify_gaps -
+# NOT the model or the behaviour dimensions - so results computed under a
+# different model, top_k, expansion, gap-filling, or routing configuration
+# collided onto one entry. Bump whenever discovery output can change for an
+# unchanged key.
+# v2: first versioned key (v1 = the implicit unversioned era). Adds model,
+# top_k, expand_searches, fill_gaps, and adaptive routing to the key; the
+# discovery pipeline simultaneously gained strict stage grammars, deterministic
+# fallbacks, scoring_status, the exactly-once original search, and the
+# degradations field - all of which change discovery output for an unchanged
+# pre-v2 key.
+DISCOVER_CACHE_VERSION = "2"
+
+
+def _source_field(source: Any, field: str) -> str:
+    """Read a source field from either a dict or an object, defaulting to ''."""
+    if isinstance(source, dict):
+        return source.get(field, "") or ""
+    return getattr(source, field, "") or ""
+
+
+def build_synthesis_cache_extra(
+    sources: list,
+    *,
+    model: str,
+    max_tokens: int,
+    mode: str,
+) -> str:
+    """Build the cache `extra` discriminator for a synthesis result.
+
+    The fingerprint hashes each source's origin + source_type + url + title +
+    content IN INPUT ORDER (not sorted): citations bind to input order, so a
+    reordered source set must not return cached citations bound to the wrong
+    documents; and origin + source_type are rendered into the synthesis prompt
+    (origin also keys the attribution breakdown), so two source sets differing
+    only in those fields must not collide. The key also carries the model, the
+    effective output budget, the pipeline mode, and SYNTH_CACHE_VERSION, so a
+    change to any of those never returns a stale hit.
+    """
+    fingerprint = hashlib.sha256(
+        "\x1e".join(
+            f"{_source_field(s, 'origin')}\x1f{_source_field(s, 'source_type')}"
+            f"\x1f{_source_field(s, 'url')}\x1f{_source_field(s, 'title')}"
+            f"\x1f{_source_field(s, 'content')}"
+            for s in sources
+        ).encode()
+    ).hexdigest()[:16]
+    return (
+        f"v={SYNTH_CACHE_VERSION}:model={model}:max_tokens={max_tokens}"
+        f":mode={mode}:src={fingerprint}"
+    )
+
+
+def build_discover_cache_extra(
+    *,
+    model: str,
+    top_k: int,
+    expand_searches: bool,
+    fill_gaps: bool,
+    use_adaptive_routing: bool,
+    focus_mode: Optional[str],
+    identify_gaps: bool,
+) -> str:
+    """Build the cache `extra` discriminator for a discovery result.
+
+    Carries DISCOVER_CACHE_VERSION plus every behaviour-affecting request
+    dimension: the model (stage grammars and budgets are model-sensitive),
+    top_k, search expansion, gap filling, adaptive routing, and the
+    focus-mode / identify_gaps pair the pre-versioned key already had.
+    """
+    return (
+        f"v={DISCOVER_CACHE_VERSION}:model={model}:top_k={top_k}"
+        f":expand={expand_searches}:fill_gaps={fill_gaps}"
+        f":routing={use_adaptive_routing}:focus_mode={focus_mode}"
+        f":identify_gaps={identify_gaps}"
+    )
+
+
+def cached(tier: str = "", ttl: Optional[int] = None, key_params: list[str] = None):
+    """
+    Decorator for caching async tool results.
+
+    Args:
+        tier: Cache tier (synthesis, discover, reason, etc.)
+        ttl: Override default TTL
+        key_params: Additional kwargs to include in cache key
+
+    Usage:
+        @cached(tier="synthesis")
+        async def _tool_synthesize(args: dict):
+            ...
+    """
+    def decorator(fn: Callable):
+        @wraps(fn)
+        async def wrapper(args: dict, *a, **kw):
+            query = args.get("query", "")
+            if not query:
+                return await fn(args, *a, **kw)
+
+            # Build extra key from specified params
+            extra_parts = []
+            if key_params:
+                for param in key_params:
+                    if param in args:
+                        extra_parts.append(f"{param}={args[param]}")
+            extra = ":".join(extra_parts)
+
+            # Check cache
+            cached_result = cache.get(query, tier=tier, extra=extra)
+            if cached_result is not None:
+                # Return cached TextContent with cache indicator
+                from mcp.types import TextContent
+                text = cached_result
+                if isinstance(text, str):
+                    text = f"*[cached]*\n\n{text}"
+                return [TextContent(type="text", text=text)]
+
+            # Execute function
+            result = await fn(args, *a, **kw)
+
+            # Cache the text content
+            if result and len(result) > 0:
+                text_content = result[0].text if hasattr(result[0], 'text') else str(result[0])
+                cache.set(query, text_content, tier=tier, extra=extra, ttl=ttl)
+
+            return result
+        return wrapper
+    return decorator
