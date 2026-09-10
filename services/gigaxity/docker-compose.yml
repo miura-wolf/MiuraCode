@@ -1,0 +1,59 @@
+services:
+  research-tool:
+    build: .
+    container_name: research-mcp
+    restart: unless-stopped
+    ports:
+      # Bind to loopback by default. The REST mode spends the env OpenRouter
+      # key for any caller that reaches it; never expose to a public interface
+      # without an authenticated reverse proxy in front.
+      - "127.0.0.1:8000:8000"
+    environment:
+      # OpenRouter LLM Configuration
+      RESEARCH_LLM_API_KEY: "${OPENROUTER_API_KEY:-}"
+      RESEARCH_LLM_API_BASE: "https://openrouter.ai/api/v1"
+      RESEARCH_LLM_MODEL: "qwen/qwen3-30b-a3b-thinking-2507"
+      RESEARCH_LLM_TEMPERATURE: "0.85"
+      RESEARCH_LLM_TOP_P: "0.95"
+      RESEARCH_LLM_MAX_TOKENS: "8192"
+      RESEARCH_LLM_TIMEOUT: "120"
+
+      # SearXNG Configuration
+      RESEARCH_SEARXNG_HOST: "${SEARXNG_HOST:-http://host.docker.internal:8888}"
+      RESEARCH_SEARXNG_ENGINES: "brave,duckduckgo,startpage,mojeek,wikipedia"
+      RESEARCH_SEARXNG_CATEGORIES: "general"
+      RESEARCH_SEARXNG_LANGUAGE: "en"
+      RESEARCH_SEARXNG_SAFESEARCH: "0"
+
+      # Brave Search Configuration (optional)
+      RESEARCH_BRAVE_API_KEY: "${BRAVE_API_KEY:-}"
+      RESEARCH_BRAVE_SAFESEARCH: "off"
+
+      # Tavily Configuration (optional)
+      RESEARCH_TAVILY_API_KEY: "${TAVILY_API_KEY:-}"
+      RESEARCH_TAVILY_SEARCH_DEPTH: "advanced"
+
+      # LinkUp Configuration (optional)
+      RESEARCH_LINKUP_API_KEY: "${LINKUP_API_KEY:-}"
+      RESEARCH_LINKUP_DEPTH: "standard"
+
+      # Search Configuration
+      RESEARCH_DEFAULT_TOP_K: "10"
+      RESEARCH_RRF_K: "60"
+    volumes:
+      # The image pre-creates /tmp/research_cache owned by uid 1000, so a fresh
+      # named volume inherits that ownership and the container can write to it.
+      # A volume created by an image older than v0.11.0 is root-owned and the
+      # cache silently never writes — docs/troubleshooting.md, "Cache never hits".
+      - research_cache:/tmp/research_cache
+    networks:
+      - research-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  research_cache:
+
+networks:
+  research-net:
+    driver: bridge
