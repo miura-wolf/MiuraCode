@@ -50,6 +50,14 @@ describe("AtomicAIHandler", () => {
 		expect(model.info).toEqual(atomicAiModels[atomicAiDefaultModelId])
 	})
 
+	it("should expose the miura-fast passthrough lane as a model", () => {
+		// F8: "miura-fast" es el carril passthrough del proxy — se lista como
+		// modelo de pleno derecho para que la UI pueda seleccionarlo.
+		expect(atomicAiModels["miura-fast"]).toBeDefined()
+		expect(atomicAiModels["miura-fast"].isFree).toBe(true)
+		expect(Object.keys(atomicAiModels)).toContain("miura-fast")
+	})
+
 	it("completePrompt method should return text from Atomic AI proxy", async () => {
 		const expectedResponse = "This is a test response from Atomic AI"
 		mockCreate.mockResolvedValueOnce({ choices: [{ message: { content: expectedResponse } }] })

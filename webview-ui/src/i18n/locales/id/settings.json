@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API Key",
 		"getBasetenApiKey": "Dapatkan Baseten API Key",
 		"atomicAiBaseUrl": "URL Basis Atomic AI",
-		"atomicAiBaseUrlDescription": "Proxy orkestrator lokal (atomic_ai). Default http://127.0.0.1:8120/v1 — mengurai percakapan menjadi daun atom dengan RAG hibrida dan fallback riset web.",
+		"atomicAiBaseUrlDescription": "Proxy orkestrator lokal (atomic_ai). Default http://127.0.0.1:8120/v1 — mengurai percakapan menjadi daun atom dengan RAG hibrida, fallback riset web dengan sintesis bersitasi, dan jalur cepat pass-through (miura-fast).",
 		"atomicAiApiKey": "Kunci API Atomic AI (opsional)",
 		"getPoolsideApiKey": "Dapatkan Poolside API Key",
 		"poolsideApiKey": "Poolside API Key",

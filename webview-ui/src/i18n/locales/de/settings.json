@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API-Schlüssel",
 		"getBasetenApiKey": "Baseten API-Schlüssel erhalten",
 		"atomicAiBaseUrl": "Atomic AI-Basis-URL",
-		"atomicAiBaseUrlDescription": "Lokaler Orchestrator-Proxy (atomic_ai). Standard http://127.0.0.1:8120/v1 — zerlegt Anfragen in atomare Blätter mit hybridem RAG und Web-Recherche-Fallback.",
+		"atomicAiBaseUrlDescription": "Lokaler Orchestrator-Proxy (atomic_ai). Standard http://127.0.0.1:8120/v1 — zerlegt Anfragen in atomare Blätter mit hybridem RAG, Web-Recherche-Fallback mit zitierter Synthese und einer direkten Fast-Lane (miura-fast).",
 		"atomicAiApiKey": "Atomic AI-API-Schlüssel (optional)",
 		"getPoolsideApiKey": "Poolside API-Schlüssel erhalten",
 		"poolsideApiKey": "Poolside API-Schlüssel",

@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API कुंजी",
 		"getBasetenApiKey": "Baseten API कुंजी प्राप्त करें",
 		"atomicAiBaseUrl": "Atomic AI बेस URL",
-		"atomicAiBaseUrlDescription": "स्थानीय ऑर्केस्ट्रेटर प्रॉक्सी (atomic_ai)। डिफ़ॉल्ट http://127.0.0.1:8120/v1 — हाइब्रिड RAG और वेब रिसर्च फ़ॉलबैक के साथ टर्न को परमाणु पत्तियों में विभाजित करता है।",
+		"atomicAiBaseUrlDescription": "स्थानीय ऑर्केस्ट्रेटर प्रॉक्सी (atomic_ai)। डिफ़ॉल्ट http://127.0.0.1:8120/v1 — हाइब्रिड RAG, उद्धृत संश्लेषण के साथ वेब रिसर्च फ़ॉलबैक और एक सीधे पासथ्रू फ़ास्ट लेन (miura-fast) के साथ टर्न को परमाणु पत्तियों में विभाजित करता है।",
 		"atomicAiApiKey": "Atomic AI API कुंजी (वैकल्पिक)",
 		"getPoolsideApiKey": "Poolside API कुंजी प्राप्त करें",
 		"poolsideApiKey": "Poolside API कुंजी",

@@ -42,8 +42,10 @@ Convertir Atomic AI de *"proxy de un solo upstream barato"* en un
 | **Investigación web de respaldo (F7)** | ✅ implementado y **validado end-to-end** (`app/web_research.py`): en un miss del RAG local llama a Gigaxity Deep Research (NIM + SearXNG) e inyecta una síntesis con citas |
 | **Carriles de búsqueda de gigaxity (F7.1)** | ✅ Exa + SerpAPI añadidos (keyed, free-tier) y **ddgs keyless** (deedy5/ddgs, opt-in `RESEARCH_DDGS_ENABLED`) — Tavily/LinkUp activos, SearXNG reservado |
 | **Rate limit NIM (F7.2)** | ✅ limiter RPM ventana deslizante cliente (`RESEARCH_LLM_RPM`, default 0=off; 40 recomendado) en `llm_client.py` — todas las llamadas LLM del proceso comparten un solo presupuesto |
+| **Rate limit del upstream en el proxy (F8.1)** | ✅ mismo patrón portado al chat: `app/rate_limit.py` + `UPSTREAM_RPM` (default 0=off) cableado en `UpstreamClient` — cada INTENTO HTTP (reintentos F2 incluidos) gasta del mismo presupuesto por proceso. NIM free-tier ~45 RPM → 40; si proxy y Gigaxity comparten cuenta NIM, repartir 20+20 |
+| **Carril passthrough `miura-fast` (F8)** | ✅ `PASSTHROUGH_MODELS` (coma-separados): la request se reenvía al upstream TAL CUAL (1 llamada, sin decomp/RAG/sesiones; stream SSE verbatim; respuesta completa no-stream). Detectado en `main.py` antes del engine; visible en `/v1/models` y `GET /` |
 | Visión (mmproj) | ✅ pero global por turno (todo el turno usa un solo modelo) |
-| Tests | ✅ **130/130** pasando |
+| Tests | ✅ **152/152** pasando (130 previos + 10 RPM + 12 passthrough) |
 
 ---
 
@@ -169,10 +171,10 @@ Contexto: la carpeta actual es el **ZIP descargado** (sin `.git`). Pasos:
 
 - Código implementado + tipado.
 - Tests nuevos (pytest) cubriendo el feature.
-- Suite completa verde (hoy 130 tests, crecerá).
+- Suite completa verde (hoy 152 tests, crecerá).
 - Documentación en `README.md` (variables y endpoints).
 - Validación manual contra llama.cpp real cuando aplique.
 
 ---
 
-*Última actualización: 2026-08-27 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB), F6 (observabilidad/métricas) y F7 (investigación web de respaldo vía Gigaxity Deep Research) implementados y testeados; F7 además validada end-to-end en real (atomic_ai → Gigaxity → NIM/SearXNG).*
+*Última actualización: 2026-09-09 — F1 (routing), F2 (resiliencia), F3 (paralelo), F4 (streaming de progreso), F5 (metadatos KB), F6 (observabilidad/métricas) y F7 (investigación web de respaldo vía Gigaxity Deep Research) implementados y testeados; F7 además validada end-to-end en real (atomic_ai → Gigaxity → NIM/SearXNG). F8 añadida: limitador RPM del upstream (`UPSTREAM_RPM`) + carril passthrough `miura-fast` (`PASSTHROUGH_MODELS`).*

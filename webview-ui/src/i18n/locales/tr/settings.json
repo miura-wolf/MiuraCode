@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API Anahtarı",
 		"getBasetenApiKey": "Baseten API Anahtarı Al",
 		"atomicAiBaseUrl": "Atomic AI Temel URL",
-		"atomicAiBaseUrlDescription": "Yerel orkestratör proxy'si (atomic_ai). Varsayılan http://127.0.0.1:8120/v1 — dönüşleri hibrit RAG ve web araştırması yedeğiyle atomik yapraklara ayırır.",
+		"atomicAiBaseUrlDescription": "Yerel orkestratör proxy'si (atomic_ai). Varsayılan http://127.0.0.1:8120/v1 — dönüşleri hibrit RAG, atıf içeren sentezle web araştırması yedeği ve doğrudan bir geçiş (passthrough) hızlı şeridi (miura-fast) ile atomik yapraklara ayırır.",
 		"atomicAiApiKey": "Atomic AI API Anahtarı (isteğe bağlı)",
 		"getPoolsideApiKey": "Poolside API Anahtarı Al",
 		"poolsideApiKey": "Poolside API Anahtarı",

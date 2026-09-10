@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API-sleutel",
 		"getBasetenApiKey": "Baseten API-sleutel verkrijgen",
 		"atomicAiBaseUrl": "Atomic AI-basis-URL",
-		"atomicAiBaseUrlDescription": "Lokale orchestratorproxy (atomic_ai). Standaard http://127.0.0.1:8120/v1 — splitst beurten op in atomische bladeren met hybride RAG en webonderzoek-fallback.",
+		"atomicAiBaseUrlDescription": "Lokale orchestratorproxy (atomic_ai). Standaard http://127.0.0.1:8120/v1 — splitst beurten op in atomische bladeren met hybride RAG, webonderzoek-fallback met geciteerde synthese en een directe passthrough-snellaan (miura-fast).",
 		"atomicAiApiKey": "Atomic AI API-sleutel (optioneel)",
 		"getPoolsideApiKey": "Poolside API-sleutel verkrijgen",
 		"poolsideApiKey": "Poolside API-sleutel",

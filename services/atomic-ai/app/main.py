@@ -37,6 +37,49 @@ from .upstream import UpstreamClient, UpstreamError
 
 app = FastAPI(title="Atomic Decomposition Proxy")
 
+
+def _is_passthrough_model(model: Optional[str]) -> bool:
+    """F8: True si el modelo pedido es uno de los carriles passthrough.
+
+    La coincidencia es exacta e insensible a mayúsculas sobre la lista
+    coma-separada de PASSTHROUGH_MODELS (vacía por defecto = ningún carril,
+    el proxy funciona exactamente como antes)."""
+    if not model or not settings.passthrough_models:
+        return False
+    lanes = {m.strip().lower() for m in settings.passthrough_models.split(",") if m.strip()}
+    return model.strip().lower() in lanes
+
+
+def _passthrough_payload(request: ChatCompletionRequest, model: str) -> dict[str, Any]:
+    """Reconstruye el payload del caller TAL CUAL: mensajes originales (sin
+    aplanar ni reescribir), tools, tool_choice, temperature y max_tokens
+    incluidos. La única intervención: fijar el `model` pedido (que en
+    passthrough ES el carril real, no un rol) y el `stream` explícito."""
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": _serialize_messages(request),
+        "stream": bool(request.stream),
+    }
+    if request.temperature is not None:
+        payload["temperature"] = request.temperature
+    if request.max_tokens is not None:
+        payload["max_tokens"] = request.max_tokens
+    if request.tools is not None:
+        payload["tools"] = request.tools
+    if request.tool_choice is not None:
+        payload["tool_choice"] = request.tool_choice
+    if request.parallel_tool_calls is not None:
+        payload["parallel_tool_calls"] = request.parallel_tool_calls
+    return payload
+
+
+def _stream_passthrough(client: UpstreamClient, payload: dict[str, Any]):
+    """Adaptador AsyncIterator[bytes] para StreamingResponse: relaya el SSE
+    del upstream BYTE a BYTE (mismo chunk-id, cadencia y usage), sin
+    re-empaquetarlo con los helpers del proxy."""
+    return client.passthrough_stream(payload)
+
+
 session_store = SessionStore(ttl_seconds=settings.session_ttl_seconds, max_sessions=settings.max_sessions)
 
 
@@ -365,7 +408,16 @@ async def root() -> dict:
             "knowledge_stats": "/v1/knowledge/stats",
             "knowledge_backfill": "/v1/knowledge/backfill",
         },
+        "passthrough_models": _passthrough_lane_names(),
     }
+
+
+def _passthrough_lane_names() -> list[str]:
+    """Lista normalizada de los carriles passthrough configurados (para / y
+    /v1/models; vacía cuando la feature está apagada)."""
+    if not settings.passthrough_models:
+        return []
+    return [m.strip() for m in settings.passthrough_models.split(",") if m.strip()]
 
 
 @app.get("/models")
@@ -388,15 +440,39 @@ async def responses_not_implemented() -> JSONResponse:
 
 @app.get("/v1/models")
 async def list_models() -> dict:
-    return {
-        "object": "list",
-        "data": [{"id": settings.upstream_model, "object": "model", "owned_by": "atomic-proxy"}],
-    }
+    models = [{"id": settings.upstream_model, "object": "model", "owned_by": "atomic-proxy"}]
+    # F8: los carriles passthrough son modelos de pleno derecho para clientes
+    # que descubren capacidades vía /v1/models.
+    for lane in _passthrough_lane_names():
+        if lane.lower() != settings.upstream_model.lower():
+            models.append({"id": lane, "object": "model", "owned_by": "atomic-proxy"})
+    return {"object": "list", "data": models}
 
 
 @app.post("/v1/chat/completions")
 async def chat_completions(request: ChatCompletionRequest):
     requested_model = request.model or settings.upstream_model
+
+    # F8 — carril passthrough: el modelo pedido es un carril directo (p. ej.
+    # "miura-fast") → una sola llamada al upstream con la request tal cual,
+    # sin descomposición, sin RAG y sin sesiones. Los errores del upstream se
+    # relayan como 502 igual que el carril orquestado.
+    if _is_passthrough_model(requested_model):
+        client = UpstreamClient()
+        payload = _passthrough_payload(request, requested_model)
+        if request.stream:
+            return StreamingResponse(
+                _stream_passthrough(client, payload),
+                media_type="text/event-stream",
+            )
+        try:
+            return await client.passthrough_complete(payload)
+        except UpstreamError as exc:
+            return JSONResponse(
+                status_code=502,
+                content={"error": {"message": str(exc), "type": "upstream_error"}},
+            )
+
     client = UpstreamClient()
     prepared = await _resolve_run(request, client, requested_model)
     lock = prepared.resumed_session.lock if prepared.resumed_session else None

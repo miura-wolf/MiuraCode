@@ -177,6 +177,11 @@ def _isolate_rag_settings(monkeypatch):
     monkeypatch.setattr(settings, "web_research_base_url", "")
     monkeypatch.setattr(settings, "web_research_enabled", True)
     monkeypatch.setattr(settings, "web_research_auto_learn", True)
+    # F8: sin carriles passthrough por defecto (los tests que los necesitan los
+    # activan explícitamente), ni limitador RPM (0 = desactivado, ninguna
+    # llamada espera).
+    monkeypatch.setattr(settings, "passthrough_models", "")
+    monkeypatch.setattr(settings, "upstream_rpm", 0)
     yield
 
 
@@ -201,6 +206,20 @@ def _reset_session_store():
     session_store._sessions.clear()
     yield
     session_store._sessions.clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_upstream_rate_limiter():
+    """El limitador RPM del upstream es una instancia por proceso A PROPÓSITO
+    (un proceso del proxy = un presupuesto contra el upstream), así que la
+    contaminación entre tests es la única fuga que este fixture cierra: sin
+    él, un test que activara upstream_rpm=2 dejaría al siguiente esperando
+    tras timestamps viejos."""
+    from app.rate_limit import reset_rate_limiter
+
+    reset_rate_limiter()
+    yield
+    reset_rate_limiter()
 
 
 @pytest.fixture

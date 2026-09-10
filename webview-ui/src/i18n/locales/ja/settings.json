@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten APIキー",
 		"getBasetenApiKey": "Baseten APIキーを取得",
 		"atomicAiBaseUrl": "Atomic AI ベースURL",
-		"atomicAiBaseUrlDescription": "ローカルオーケストレータープロキシ (atomic_ai)。デフォルトは http://127.0.0.1:8120/v1 — ハイブリッドRAGとWebリサーチのフォールバックにより、ターンをアトミックリーフに分解します。",
+		"atomicAiBaseUrlDescription": "ローカルオーケストレータープロキシ (atomic_ai)。デフォルトは http://127.0.0.1:8120/v1 — ハイブリッドRAG、引用付き総括のWebリサーチのフォールバック、およびパススルー高速レーン (miura-fast) により、ターンをアトミックリーフに分解します。",
 		"atomicAiApiKey": "Atomic AI APIキー (任意)",
 		"getPoolsideApiKey": "Poolside APIキーを取得",
 		"poolsideApiKey": "Poolside APIキー",

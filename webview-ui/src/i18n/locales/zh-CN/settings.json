@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API 密钥",
 		"getBasetenApiKey": "获取 Baseten API 密钥",
 		"atomicAiBaseUrl": "Atomic AI 基础 URL",
-		"atomicAiBaseUrlDescription": "本地编排器代理 (atomic_ai)。默认为 http://127.0.0.1:8120/v1 — 将回合分解为原子叶子，支持混合 RAG 和网络研究回退。",
+		"atomicAiBaseUrlDescription": "本地编排器代理 (atomic_ai)。默认为 http://127.0.0.1:8120/v1 — 将回合分解为原子叶子，支持混合 RAG、带引用合成的网络研究回退以及直通快速通道 (miura-fast)。",
 		"atomicAiApiKey": "Atomic AI API 密钥（可选）",
 		"getPoolsideApiKey": "获取 Poolside API 密钥",
 		"poolsideApiKey": "Poolside API 密钥",

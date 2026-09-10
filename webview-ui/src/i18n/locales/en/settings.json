@@ -441,7 +441,7 @@
 		"basetenApiKey": "Baseten API Key",
 		"getBasetenApiKey": "Get Baseten API Key",
 		"atomicAiBaseUrl": "Atomic AI Base URL",
-		"atomicAiBaseUrlDescription": "Local orchestrator proxy (atomic_ai). Defaults to http://127.0.0.1:8120/v1 — decomposes turns into atomic leaves with hybrid RAG and web research fallback.",
+		"atomicAiBaseUrlDescription": "Local orchestrator proxy (atomic_ai). Defaults to http://127.0.0.1:8120/v1 — decomposes turns into atomic leaves with hybrid RAG, web research fallback with cited synthesis, and a passthrough fast lane (miura-fast).",
 		"atomicAiApiKey": "Atomic AI API Key (optional)",
 		"getPoolsideApiKey": "Get Poolside API Key",
 		"poolsideApiKey": "Poolside API Key",

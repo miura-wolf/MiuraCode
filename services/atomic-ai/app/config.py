@@ -97,6 +97,21 @@ class Settings(BaseSettings):
     web_research_auto_learn: bool = True
     web_research_max_concurrency: int = 2
 
+    # Limitador RPM del upstream (lado cliente, ventana deslizante de 60s).
+    # Tope de llamadas HTTP por minuto compartido por TODAS las fases del
+    # proxy (descomposición, hojas, síntesis, reintentos F2 y passthrough).
+    # Pensado para free-tiers con tope por minuto (NVIDIA NIM ~45 RPM → 40).
+    # 0 = desactivado (default: un upstream local como llama.cpp no tiene
+    # tope). Ver app/rate_limit.py.
+    upstream_rpm: int = 0
+
+    # Carril passthrough: modelos (coma-separados) que se reenvían al
+    # upstream TAL CUAL — una sola llamada, sin descomposición, sin RAG y sin
+    # sesiones. Es el carril de latencia mínima para chat directo (p. ej.
+    # "miura-fast"). Vacío = ninguno. Sus llamadas pasan por el mismo
+    # presupuesto UPSTREAM_RPM que el resto.
+    passthrough_models: str = ""
+
     def resolved_api_key(self) -> str:
         return self.upstream_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
 

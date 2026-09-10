@@ -378,7 +378,7 @@
 		"basetenApiKey": "Khóa API Baseten",
 		"getBasetenApiKey": "Lấy khóa API Baseten",
 		"atomicAiBaseUrl": "URL cơ sở của Atomic AI",
-		"atomicAiBaseUrlDescription": "Proxy điều phối cục bộ (atomic_ai). Mặc định http://127.0.0.1:8120/v1 — phân tách các lượt thành lá nguyên tử với RAG lai và dự phòng tìm kiếm web.",
+		"atomicAiBaseUrlDescription": "Proxy điều phối cục bộ (atomic_ai). Mặc định http://127.0.0.1:8120/v1 — phân tách các lượt thành lá nguyên tử với RAG lai, dự phòng tìm kiếm web kèm tổng hợp có trích dẫn và một làn nhanh chuyển tiếp thẳng (miura-fast).",
 		"atomicAiApiKey": "Khóa API Atomic AI (tùy chọn)",
 		"getPoolsideApiKey": "Lấy khóa API Poolside",
 		"poolsideApiKey": "Khóa API Poolside",

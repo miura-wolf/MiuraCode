@@ -378,7 +378,7 @@
 		"basetenApiKey": "Baseten API-ключ",
 		"getBasetenApiKey": "Получить Baseten API-ключ",
 		"atomicAiBaseUrl": "Базовый URL Atomic AI",
-		"atomicAiBaseUrlDescription": "Локальный прокси-оркестратор (atomic_ai). По умолчанию http://127.0.0.1:8120/v1 — разбивает ходы на атомарные листья с гибридным RAG и веб-поиском в качестве резерва.",
+		"atomicAiBaseUrlDescription": "Локальный прокси-оркестратор (atomic_ai). По умолчанию http://127.0.0.1:8120/v1 — разбивает ходы на атомарные листья с гибридным RAG, веб-поиском в качестве резерва с цитируемым синтезом и быстрым сквозным каналом (miura-fast).",
 		"atomicAiApiKey": "API-ключ Atomic AI (необязательно)",
 		"getPoolsideApiKey": "Получить API-ключ Poolside",
 		"poolsideApiKey": "API-ключ Poolside",

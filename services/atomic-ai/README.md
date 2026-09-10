@@ -144,6 +144,8 @@ Variables de entorno disponibles en `.env`:
 | `WEB_RESEARCH_REASONING_EFFORT` | Esfuerzo de razonamiento de la síntesis (`low`/`medium`/`high`) | `medium` |
 | `WEB_RESEARCH_AUTO_LEARN` | Auto-aprende la síntesis web en la KB (`source=web_research`) | `true` |
 | `WEB_RESEARCH_MAX_CONCURRENCY` | Máximo de investigaciones web simultáneas | `2` |
+| `UPSTREAM_RPM` | Tope de llamadas HTTP/min (ventana deslizante de 60s) compartido por TODAS las fases del proxy (descomposición, hojas, síntesis, reintentos F2 y passthrough F8). Pensado para free-tiers con tope por minuto (NVIDIA NIM ~45 RPM → `40`). El tope es de la cuenta del upstream, no de este proceso: si este proxy y Gigaxity apuntan a la misma cuenta, repartan (p. ej. `20`+`20`). `0` = desactivado | `0` |
+| `PASSTHROUGH_MODELS` | Modelos (coma-separados) reenviados al upstream TAL CUAL — una sola llamada, sin descomposición/RAG/sesiones (carril `miura-fast`). Vacío = ninguno | *(vacío)* |
 
 ### Metadatos de la base de conocimiento (F5)
 
@@ -351,10 +353,29 @@ WEB_RESEARCH_BASE_URL=http://127.0.0.1:8090
   investigación web y el bloque con citas se inyectó en `{knowledge}`
   (`web_research_hits=1`, ~28s).
 
+### Carril passthrough (F8) — `miura-fast`
+
+Cuando el modelo pedido en la request es uno de los carriles configurados en
+`PASSTHROUGH_MODELS` (p. ej. `miura-fast`), el proxy **reenvía la request al
+upstream TAL CUAL**: una sola llamada HTTP, sin descomposición atómica, sin
+RAG, sin sesiones y sin reescribir los mensajes del caller. Es el carril de
+latencia mínima para chat directo.
+
+- **Detección** — coincidencia exacta (insensible a mayúsculas) contra la
+  lista coma-separada; cualquier otro modelo sigue por el carril orquestado.
+- **Payload preservado** — `messages`, `tools`, `tool_choice`,
+  `temperature` y `max_tokens` viajan sin tocar; la respuesta no-stream es
+  el JSON completo del upstream (id/usage/choices) y el stream relaya los
+  bytes SSE verbatim (mismo chunk-id y cadencia).
+- **Presupuesto compartido** — las llamadas passthrough consumen el mismo
+  `UPSTREAM_RPM` que el resto del proxy (ver `app/rate_limit.py`).
+- **Visibilidad** — los carriles aparecen en `GET /v1/models` y en `GET /`
+  (`passthrough_models`).
+
 ## Tests
 
 ```bash
 pytest
 ```
 
-La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`), los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`), la observabilidad/métricas (`tests/test_metrics.py`) y la investigación web de respaldo (`tests/test_web_research.py`).
+La suite cubre el motor de descomposición, el manejo de sesiones, el contenido multimodal, los schemas, un flujo end-to-end contra un upstream simulado (`tests/test_fake_upstream.py`), los endpoints admin de conocimiento (`tests/test_knowledge_admin.py`), la búsqueda híbrida semántica con embedder simulado (`tests/test_hybrid_semantic.py`), el routing multi-modelo por especialidad (`tests/test_routing.py`), la resiliencia de reintentos/fallback (`tests/test_resilience.py`), la ejecución paralela de hojas (`tests/test_parallel.py`), el streaming con progreso del árbol (`tests/test_progress.py`), los metadatos/grafo de la base de conocimiento (`tests/test_knowledge_metadata.py`), la observabilidad/métricas (`tests/test_metrics.py`), la investigación web de respaldo (`tests/test_web_research.py`), el limitador RPM del upstream (`tests/test_rate_limit.py`) y el carril passthrough (`tests/test_passthrough.py`).

@@ -378,7 +378,7 @@
 		"basetenApiKey": "Clau API de Baseten",
 		"getBasetenApiKey": "Obtenir clau API de Baseten",
 		"atomicAiBaseUrl": "URL base d'Atomic AI",
-		"atomicAiBaseUrlDescription": "Proxy orquestrador local (atomic_ai). Per defecte http://127.0.0.1:8120/v1 — descompon els torns en fulles atòmiques amb RAG híbrid i recerca web de suport.",
+		"atomicAiBaseUrlDescription": "Proxy orquestrador local (atomic_ai). Per defecte http://127.0.0.1:8120/v1 — descompon els torns en fulles atòmiques amb RAG híbrid, recerca web de suport amb síntesi citada i un carril ràpid de pas directe (miura-fast).",
 		"atomicAiApiKey": "Clau API d'Atomic AI (opcional)",
 		"getPoolsideApiKey": "Obtenir clau API de Poolside",
 		"poolsideApiKey": "Clau API de Poolside",

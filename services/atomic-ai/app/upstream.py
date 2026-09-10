@@ -6,6 +6,7 @@ from typing import Any, Optional
 import httpx
 
 from .config import settings
+from .rate_limit import get_rate_limiter
 
 # Códigos HTTP que consideramos transitorios (reintentables). Los 4xx restantes
 # (auth, bad request, modelo no encontrado...) no se reintentan: reintentar no
@@ -33,6 +34,12 @@ class UpstreamClient:
     def __init__(self) -> None:
         self._base_url = settings.upstream_base_url.rstrip("/")
         self._api_key = settings.resolved_api_key()
+        # Limitador RPM lado cliente (ver app/rate_limit.py): una única
+        # instancia por proceso compartida por TODA llamada HTTP de este
+        # cliente, de modo que el proxy entero (descomposición, hojas,
+        # síntesis, reintentos F2 y carril passthrough) gasta UN solo
+        # presupuesto contra el upstream.
+        self._rate_limiter = get_rate_limiter()
 
     def _headers(self) -> dict[str, str]:
         return {
@@ -95,6 +102,11 @@ class UpstreamClient:
             )
             try:
                 async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
+                    # Cada INTENTO HTTP pasa por el presupuesto RPM (no cada
+                    # request del caller): el bucle de reintentos de la F2 es
+                    # precisamente el que amplifica las ráfagas contra un
+                    # upstream con tope por minuto.
+                    await self._rate_limiter.acquire()
                     resp = await client.post(
                         f"{self._base_url}/v1/chat/completions",
                         headers=self._headers(),
@@ -146,6 +158,9 @@ class UpstreamClient:
                     headers=self._headers(),
                     json=payload,
                 )
+                # Mismo contrato que complete_raw: cada intento HTTP consume
+                # presupuesto RPM (stream incluido).
+                await self._rate_limiter.acquire()
                 response = await client.send(request, stream=True)
                 if response.status_code >= 400:
                     body = await response.aread()
@@ -208,3 +223,58 @@ class UpstreamClient:
                 "delta": choice.get("delta", {}),
                 "finish_reason": choice.get("finish_reason"),
             }
+
+    # ------------------------------------------------------------------
+    # F8 — Carril passthrough: reenviar la request tal cual, una sola
+    # llamada, sin descomposición/RAG/sesiones. Es el carril de latencia
+    # mínima para chat directo (p. ej. "miura-fast").
+    # ------------------------------------------------------------------
+
+    async def passthrough_complete(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Una sola llamada al upstream con el payload tal cual (sin bucle de
+        reintentos: el carril es de latencia mínima y un reintento oculto
+        gastaría presupuesto que el caller no ve). Devuelve el JSON COMPLETO
+        de la respuesta del upstream (id/created/usage/choices...), no solo el
+        mensaje — passthrough de verdad."""
+        async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
+            await self._rate_limiter.acquire()
+            resp = await client.post(
+                f"{self._base_url}/v1/chat/completions",
+                headers=self._headers(),
+                json=payload,
+            )
+        if resp.status_code >= 400:
+            raise UpstreamError(
+                f"Upstream error {resp.status_code}: {resp.text}",
+                status_code=resp.status_code,
+            )
+        return resp.json()
+
+    async def passthrough_stream(self, payload: dict[str, Any]) -> AsyncIterator[bytes]:
+        """Igual que passthrough_complete pero en streaming: relaya los BYTES
+        SSE del upstream VERBATIM (mismo chunk-id, cadencia, usage y
+        reasoning_content que produce el upstream) sin re-empaquetarlos en los
+        helpers del proxy."""
+        client = httpx.AsyncClient(timeout=settings.request_timeout_seconds)
+        response = None
+        try:
+            request = client.build_request(
+                "POST",
+                f"{self._base_url}/v1/chat/completions",
+                headers=self._headers(),
+                json=payload,
+            )
+            await self._rate_limiter.acquire()
+            response = await client.send(request, stream=True)
+            if response.status_code >= 400:
+                body = await response.aread()
+                raise UpstreamError(
+                    f"Upstream error {response.status_code}: {body.decode()}",
+                    status_code=response.status_code,
+                )
+            async for chunk in response.aiter_bytes():
+                yield chunk
+        finally:
+            if response is not None:
+                await response.aclose()
+            await client.aclose()
