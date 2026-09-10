@@ -34,7 +34,7 @@
 	"settings.vsCodeLmModelSelector.description": "Настройки для VSCode Language Model API",
 	"settings.vsCodeLmModelSelector.vendor.description": "Поставщик языковой модели (например, copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "Семейство языковой модели (например, gpt-4)",
-	"settings.customStoragePath.description": "Пользовательский путь хранения. Оставьте пустым для использования пути по умолчанию. Поддерживает абсолютные пути (например, 'D:\\RooCodeStorage')",
+	"settings.customStoragePath.description": "Пользовательский путь хранения. Оставьте пустым для использования пути по умолчанию. Поддерживает абсолютные пути (например, 'D:\\MiuraCodeStorage')",
 	"settings.enableCodeActions.description": "Включить быстрые исправления MiuraCode.",
 	"settings.autoImportSettingsPath.description": "Путь к файлу конфигурации RooCode для автоматического импорта при запуске расширения. Поддерживает абсолютные пути и пути относительно домашнего каталога (например, '~/Documents/roo-code-settings.json'). Оставьте пустым, чтобы отключить автоматический импорт.",
 	"settings.maximumIndexedFilesForFileSearch.description": "Максимальное количество файлов для индексации при поиске файлов @. Большие значения обеспечивают лучшие результаты поиска в крупных проектах, но могут потреблять больше памяти. По умолчанию: 10 000.",

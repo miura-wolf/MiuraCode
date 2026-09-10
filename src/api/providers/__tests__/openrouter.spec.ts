@@ -100,9 +100,9 @@ describe("OpenRouterHandler", () => {
 			baseURL: "https://openrouter.ai/api/v1",
 			apiKey: mockOptions.openRouterApiKey,
 			defaultHeaders: {
-				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-				"X-Title": "Roo Code",
-				"User-Agent": `RooCode/${Package.version}`,
+				"HTTP-Referer": "https://github.com/miura-wolf/MiuraCode",
+				"X-Title": "MiuraCode",
+				"User-Agent": `MiuraCode/${Package.version}`,
 			},
 		})
 	})

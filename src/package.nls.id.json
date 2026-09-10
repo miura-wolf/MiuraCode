@@ -34,7 +34,7 @@
 	"settings.vsCodeLmModelSelector.description": "Pengaturan untuk API Model Bahasa VSCode",
 	"settings.vsCodeLmModelSelector.vendor.description": "Vendor dari model bahasa (misalnya copilot)",
 	"settings.vsCodeLmModelSelector.family.description": "Keluarga dari model bahasa (misalnya gpt-4)",
-	"settings.customStoragePath.description": "Path penyimpanan kustom. Biarkan kosong untuk menggunakan lokasi default. Mendukung path absolut (misalnya 'D:\\RooCodeStorage')",
+	"settings.customStoragePath.description": "Path penyimpanan kustom. Biarkan kosong untuk menggunakan lokasi default. Mendukung path absolut (misalnya 'D:\\MiuraCodeStorage')",
 	"settings.enableCodeActions.description": "Aktifkan perbaikan cepat MiuraCode.",
 	"settings.autoImportSettingsPath.description": "Path ke file konfigurasi RooCode untuk diimpor secara otomatis saat ekstensi dimulai. Mendukung path absolut dan path relatif terhadap direktori home (misalnya '~/Documents/roo-code-settings.json'). Biarkan kosong untuk menonaktifkan impor otomatis.",
 	"settings.maximumIndexedFilesForFileSearch.description": "Jumlah maksimum file yang akan diindeks untuk fitur pencarian file @. Nilai yang lebih besar memberikan hasil pencarian yang lebih baik di proyek besar tetapi mungkin menggunakan lebih banyak memori. Default: 10.000.",
