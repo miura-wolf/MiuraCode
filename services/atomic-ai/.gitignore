@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.db
+*.db-wal
+*.db-shm
+
+# MiuraCode workspace (repo aparte)
+MiuraCode/
