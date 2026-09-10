@@ -42,10 +42,13 @@ class UpstreamClient:
         self._rate_limiter = get_rate_limiter()
 
     def _headers(self) -> dict[str, str]:
-        return {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-        }
+        headers = {"Content-Type": "application/json"}
+        # Con API key vacía (upstream local sin auth, p. ej. llama-server) el
+        # header Authorization se OMITE: httpx rechaza "Bearer " con valor
+        # vacío (LocalProtocolError: Illegal header value).
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        return headers
 
     def _model_for_attempt(self, model: str, attempt: int) -> str:
         """F2: en los reintentos (intento > 0) usa el modelo de respaldo si está
