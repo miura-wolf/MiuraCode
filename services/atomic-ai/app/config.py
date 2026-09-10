@@ -106,10 +106,13 @@ class Settings(BaseSettings):
     upstream_rpm: int = 0
 
     # Carril passthrough: modelos (coma-separados) que se reenvían al
-    # upstream TAL CUAL — una sola llamada, sin descomposición, sin RAG y sin
+    # upstream con UNA sola llamada — sin descomposición, sin RAG y sin
     # sesiones. Es el carril de latencia mínima para chat directo (p. ej.
-    # "miura-fast"). Vacío = ninguno. Sus llamadas pasan por el mismo
-    # presupuesto UPSTREAM_RPM que el resto.
+    # "miura-fast"). Cada entrada es "carril" (se reenvía el nombre tal
+    # cual) o "carril=modelo" (mapeo a un modelo real del upstream, para
+    # cuando éste no conoce el alias, p. ej. "miura-fast=Qwen3.5-4B").
+    # Vacío = ninguno. Sus llamadas pasan por el mismo presupuesto
+    # UPSTREAM_RPM que el resto.
     passthrough_models: str = ""
 
     def resolved_api_key(self) -> str:

@@ -38,25 +38,51 @@ from .upstream import UpstreamClient, UpstreamError
 app = FastAPI(title="Atomic Decomposition Proxy")
 
 
+def _passthrough_map() -> dict[str, Optional[str]]:
+    """F8: parsea PASSTHROUGH_MODELS en un mapa carril → modelo upstream.
+
+    Cada entrada de la lista coma-separada puede ser:
+    - "carril"        → el nombre del carril se reenvía TAL CUAL al upstream
+    - "carril=modelo" → el carril se mapea a un modelo real del upstream
+
+    El mapeo existe para upstreams que no conocen el alias del carril
+    (p. ej. llama.cpp: "miura-fast=Qwen3.5-4B"). Claves en minúsculas; un
+    carril sin "=" (o con target vacío) se reenvía verbatim."""
+    if not settings.passthrough_models:
+        return {}
+    mapping: dict[str, Optional[str]] = {}
+    for entry in settings.passthrough_models.split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        lane, sep, target = entry.partition("=")
+        lane = lane.strip()
+        if not lane:
+            continue
+        mapping[lane.lower()] = target.strip() if sep else None
+    return mapping
+
+
 def _is_passthrough_model(model: Optional[str]) -> bool:
     """F8: True si el modelo pedido es uno de los carriles passthrough.
 
-    La coincidencia es exacta e insensible a mayúsculas sobre la lista
-    coma-separada de PASSTHROUGH_MODELS (vacía por defecto = ningún carril,
-    el proxy funciona exactamente como antes)."""
+    La coincidencia es exacta e insensible a mayúsculas sobre las claves de
+    _passthrough_map() (vacío por defecto = ningún carril, el proxy funciona
+    exactamente como antes)."""
     if not model or not settings.passthrough_models:
         return False
-    lanes = {m.strip().lower() for m in settings.passthrough_models.split(",") if m.strip()}
-    return model.strip().lower() in lanes
+    return model.strip().lower() in _passthrough_map()
 
 
 def _passthrough_payload(request: ChatCompletionRequest, model: str) -> dict[str, Any]:
     """Reconstruye el payload del caller TAL CUAL: mensajes originales (sin
     aplanar ni reescribir), tools, tool_choice, temperature y max_tokens
-    incluidos. La única intervención: fijar el `model` pedido (que en
-    passthrough ES el carril real, no un rol) y el `stream` explícito."""
+    incluidos. La única intervención: fijar el `model` — el nombre del carril
+    tal cual, o el modelo real si la entrada era "carril=modelo" — y el
+    `stream` explícito."""
+    resolved = _passthrough_map().get(model.strip().lower()) or model
     payload: dict[str, Any] = {
-        "model": model,
+        "model": resolved,
         "messages": _serialize_messages(request),
         "stream": bool(request.stream),
     }
@@ -413,11 +439,17 @@ async def root() -> dict:
 
 
 def _passthrough_lane_names() -> list[str]:
-    """Lista normalizada de los carriles passthrough configurados (para / y
-    /v1/models; vacía cuando la feature está apagada)."""
+    """Nombres de los carriles passthrough configurados (para / y /v1/models;
+    vacía cuando la feature está apagada). Muestra el nombre del carril, no
+    el modelo upstream al que pueda mapear."""
+    names: list[str] = []
     if not settings.passthrough_models:
-        return []
-    return [m.strip() for m in settings.passthrough_models.split(",") if m.strip()]
+        return names
+    for entry in settings.passthrough_models.split(","):
+        lane = entry.partition("=")[0].strip()
+        if lane:
+            names.append(lane)
+    return names
 
 
 @app.get("/models")

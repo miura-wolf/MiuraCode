@@ -17,6 +17,32 @@ from app.main import _is_passthrough_model
 
 class TestLaneDetection:
 
+    def test_mapping_syntax_lane_detected_and_resolved(self, monkeypatch):
+        """F8: la forma "carril=modelo" registra el carril para la detección y
+        el mapa resuelve al modelo real del upstream."""
+        from app.main import _passthrough_map
+
+        monkeypatch.setattr(settings, "passthrough_models", "miura-fast=Qwen3.5-4B")
+        assert _is_passthrough_model("miura-fast") is True
+        assert _is_passthrough_model("MIURA-FAST") is True
+        assert _is_passthrough_model("Qwen3.5-4B") is False
+        assert _passthrough_map() == {"miura-fast": "Qwen3.5-4B"}
+
+    def test_mapping_survives_spaces_and_multiple_lanes(self, monkeypatch):
+        from app.main import _passthrough_map
+
+        monkeypatch.setattr(
+            settings, "passthrough_models", " miura-fast = Qwen3.5-4B , gemma-fast =Gemma4-E2B, plain-lane"
+        )
+        lane_map = _passthrough_map()
+        assert lane_map == {
+            "miura-fast": "Qwen3.5-4B",
+            "gemma-fast": "Gemma4-E2B",
+            "plain-lane": None,
+        }
+        assert _is_passthrough_model("plain-lane") is True
+        assert _is_passthrough_model("gemma-fast") is True
+
     def test_shipped_default_is_empty(self):
         """Afirmar el default del CAMPO, no el valor vivo (patrón del resto del
         suite): el .env del desarrollador puede cargar carriles."""
@@ -75,6 +101,32 @@ class TestPassthroughNoStream:
         # temperature/max_tokens preservados.
         assert sent["temperature"] == 0.3
         assert sent["max_tokens"] == 128
+
+    async def test_mapped_lane_sends_upstream_model(self, client, fake_upstream, monkeypatch):
+        """F8: con "carril=modelo", el upstream recibe el modelo REAL — no el
+        alias del carril — pero todo lo demás viaja intacto y el caller ve la
+        respuesta completa como en el carril verbatim."""
+        monkeypatch.setattr(settings, "passthrough_models", "miura-fast=Qwen3.5-4B")
+        fake_upstream.queue_completion(content="respuesta mapeada")
+
+        resp = await client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "miura-fast",
+                "messages": [{"role": "user", "content": "hola"}],
+                "temperature": 0.2,
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["choices"][0]["message"]["content"] == "respuesta mapeada"
+
+        assert len(fake_upstream.received) == 1
+        sent = fake_upstream.received[0]
+        # El modelo que llega al upstream es el objetivo del mapeo…
+        assert sent["model"] == "Qwen3.5-4B"
+        # …y el resto del payload sigue siendo el del caller, tal cual.
+        assert sent["messages"] == [{"role": "user", "content": "hola"}]
+        assert sent["temperature"] == 0.2
 
     async def test_tools_and_tool_choice_preserved(self, client, fake_upstream, monkeypatch):
         monkeypatch.setattr(settings, "passthrough_models", "miura-fast")
