@@ -372,6 +372,20 @@ latencia mínima para chat directo.
 - **Visibilidad** — los carriles aparecen en `GET /v1/models` y en `GET /`
   (`passthrough_models`).
 
+## Upstream en la practica: lane local vs. NVIDIA NIM
+
+El upstream por defecto es **NVIDIA NIM free tier** (motor orquestado con
+`deepseek-v4-flash` + carriles `miura-fast`/`miura-reasoner`). El lane de
+generacion con llama.cpp local (`Qwen3.5-4B-EmperoAI-Qwen3.8`) quedo
+descartado tras pruebas en vivo: consume todo el presupuesto de tokens en
+`reasoning_content` y emite contenido vacio (con y sin streaming, con
+`max_tokens` 2048 y 8192). La evidencia numerica completa y la configuracion
+resultante viven en
+[docs/LOCAL_LLAMACPP_FINDINGS.md](docs/LOCAL_LLAMACPP_FINDINGS.md). El
+llama-server local sigue vigente como servidor de **embeddings**
+(`EMBEDDINGS_BASE_URL`, bge-m3).
+
+## Tests
 ## Tests
 
 ```bash
