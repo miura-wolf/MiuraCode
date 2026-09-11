@@ -1,10 +1,12 @@
-# 🚀 ROADMAP — MiuraCode (monorepo)
+# ROADMAP — MiuraCode (monorepo)
 
 > Plan de trabajo del ecosistema Miura: fork de Roo-Code (`miura-wolf/MiuraCode`,
 > rama `miuracode`) con los servicios backend absorbidos como subtrees bajo
 > `services/`. Este archivo es la lista única de tareas pendientes del
 > ecosistema; el detalle técnico de atomic-ai vive en
-> `services/atomic-ai/ROADMAP.md`.
+> `services/atomic-ai/ROADMAP.md` y el **traspaso integral del proyecto**
+> (qué se buscó, qué se hizo, con evidencia, y roadmap priorizado completo)
+> vive en [`HANDOFF.md`](HANDOFF.md).
 
 ---
 

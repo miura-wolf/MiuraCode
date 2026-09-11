@@ -54,6 +54,11 @@ Learn more: [Using Modes](https://docs.roocode.com/basic-usage/using-modes) • 
 
 ## Local Setup & Development
 
+> **New to this repo?** Read [`HANDOFF.md`](HANDOFF.md) first — it is the single
+> source of truth for the whole Miura ecosystem (VS Code extension + atomic-ai
+> proxy + `miura` TUI + gigaxity deep research): what was built, with evidence,
+> and what to do next (Spanish, with an English TL;DR).
+
 1. **Clone** the repo:
 
 ```sh
