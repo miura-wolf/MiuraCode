@@ -1,0 +1,38 @@
+{
+	"name": "@miuracode/cli",
+	"version": "0.1.0",
+	"description": "miura — TUI de chat persistente sobre el proxy Atomic AI (sesiones SQLite+FTS5, --resume y memoria local)",
+	"private": true,
+	"type": "module",
+	"main": "dist/index.js",
+	"bin": {
+		"miura": "dist/index.js"
+	},
+	"engines": {
+		"node": ">=23.4.0"
+	},
+	"scripts": {
+		"format": "prettier --write 'src/**/*.ts' 'src/**/*.tsx'",
+		"lint": "eslint src --ext .ts,.tsx --max-warnings=0",
+		"check-types": "tsc --noEmit",
+		"test": "vitest run",
+		"build": "tsup",
+		"dev": "tsx src/index.ts",
+		"clean": "rimraf dist .turbo"
+	},
+	"dependencies": {
+		"commander": "^12.1.0",
+		"ink": "^6.6.0",
+		"react": "^19.1.0"
+	},
+	"devDependencies": {
+		"@roo-code/config-eslint": "workspace:^",
+		"@roo-code/config-typescript": "workspace:^",
+		"@types/node": "^24.1.0",
+		"@types/react": "^19.1.6",
+		"rimraf": "^6.0.1",
+		"tsx": "^4.19.2",
+		"tsup": "^8.4.0",
+		"vitest": "^3.2.3"
+	}
+}
